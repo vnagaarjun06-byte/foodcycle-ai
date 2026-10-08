@@ -177,35 +177,124 @@
         </div>
       </div>
 
-      <!-- Live Activity Ticker & Architecture Summary -->
-      <div class="grid-2col">
+      <!-- Live Interactive Working Process & Free Rescue Map Cockpit -->
+      <div class="grid-map-layout mb-4">
+        
+        <!-- LEFT: Interactive Real-Time Workflow Console -->
         <div class="panel">
-          <div class="panel-header">
-            <h3><i class="fa-solid fa-clock-rotate-left"></i> Real-Time Lifecycle Audit Log</h3>
-            <button class="btn btn-sm btn-ghost" id="refresh-logs-btn"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+          <div class="panel-header bg-workflow-header">
+            <h3><i class="fa-solid fa-diagram-project text-primary"></i> Real-Time Working Process Engine</h3>
+            <span class="badge badge-success">Live Lifecycle Active</span>
           </div>
           <div class="panel-body">
-            <div class="log-stream" id="audit-log-stream">
-              <!-- Rendered via JS -->
+            
+            <!-- Pitch Flow Quick Action Buttons -->
+            <div class="workflow-controls-bar mb-3">
+              <button class="btn btn-demo-walkthrough w-100" id="btn-master-demo" onclick="runLiveRescueVisionWalkthrough()">
+                <i class="fa-solid fa-play"></i> ▶ Run Live Rescue Vision Demo (60s Pitch)
+              </button>
+              <div class="grid-2col mt-2" style="gap: 8px;">
+                <button class="btn btn-sm btn-warning" onclick="triggerSimulator(24)">
+                  <i class="fa-solid fa-forward"></i> Advance 24h (20%&rarr;70%)
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="triggerSimulator(72)">
+                  <i class="fa-solid fa-triangle-exclamation"></i> Trigger SOS Window (<5h)
+                </button>
+              </div>
             </div>
+
+            <!-- 4-Step Interactive Visualizer Cards -->
+            <div class="interactive-stage-cards">
+              
+              <!-- Stage 1 -->
+              <div class="stage-flow-card" id="stage-card-1" onclick="switchTab('tab-donor')">
+                <div class="d-flex justify-content-between align-items-center">
+                  <strong><span class="p-step-num">1</span> Donor Logs Surplus Food</strong>
+                  <span class="badge badge-info">AI Predicted Expiry</span>
+                </div>
+                <p class="text-muted mt-1" style="font-size: 12px; margin-bottom: 0;">
+                  Marriage halls, bakeries, & canteens log batches. AI evaluates temperature degradation.
+                </p>
+              </div>
+
+              <!-- Stage 2 -->
+              <div class="stage-flow-card" id="stage-card-2" onclick="switchTab('tab-market')">
+                <div class="d-flex justify-content-between align-items-center">
+                  <strong><span class="p-step-num">2</span> Dynamic Discount (9-Day Window)</strong>
+                  <span class="badge badge-discount">20% &rarr; 50% &rarr; 70%</span>
+                </div>
+                <p class="text-muted mt-1" style="font-size: 12px; margin-bottom: 0;">
+                  Automated price cuts encourage consumer rescue before expiration. Sell it before waste!
+                </p>
+              </div>
+
+              <!-- Stage 3 -->
+              <div class="stage-flow-card highlight-urgent" id="stage-card-3" onclick="simulateVehicleRun()">
+                <div class="d-flex justify-content-between align-items-center">
+                  <strong><span class="p-step-num" style="background: #ef4444; color:#fff;">3</span> Smart SOS Urgency (&le;5h / 5d)</strong>
+                  <span class="badge badge-sos">Priority GPS Route</span>
+                </div>
+                <p class="text-muted mt-1" style="font-size: 12px; margin-bottom: 0;">
+                  Price drops to ₹0. Priority route to nearby orphanages. Click to animate rescue van on map!
+                </p>
+              </div>
+
+              <!-- Stage 4 -->
+              <div class="stage-flow-card" id="stage-card-4" onclick="switchTab('tab-tax')">
+                <div class="d-flex justify-content-between align-items-center">
+                  <strong><span class="p-step-num">4</span> 80G Receipt & Biogas Recycling</strong>
+                  <span class="badge badge-success">Form 10BE + ESG</span>
+                </div>
+                <p class="text-muted mt-1" style="font-size: 12px; margin-bottom: 0;">
+                  Donors receive statutory 80G tax deductions. Expired food is converted to clean biogas & compost.
+                </p>
+              </div>
+
+            </div>
+
+            <!-- Live Audit Stream Preview -->
+            <div class="mt-3">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <strong style="font-size: 11px; text-transform: uppercase; color: #94a3b8;"><i class="fa-solid fa-clock-rotate-left"></i> Live Engine Activity</strong>
+                <button class="btn btn-ghost btn-sm p-0" onclick="loadStatsAndLogs()"><i class="fa-solid fa-rotate-right"></i></button>
+              </div>
+              <div class="log-stream" id="audit-log-stream" style="max-height: 120px;">
+                <!-- Injected by JS -->
+              </div>
+            </div>
+
           </div>
         </div>
 
-        <div class="panel">
-          <div class="panel-header">
-            <h3><i class="fa-solid fa-layer-group"></i> System Architecture Highlights</h3>
-            <span class="badge badge-success">Production Ready</span>
+        <!-- RIGHT: Live Free Leaflet Rescue Map -->
+        <div class="panel h-100">
+          <div class="panel-header" style="flex-wrap: wrap; gap: 8px;">
+            <div class="d-flex align-items-center gap-2">
+              <h3><i class="fa-solid fa-map-location-dot text-primary"></i> Live Free Geospatial Rescue Map</h3>
+            </div>
+            <div class="d-flex align-items-center gap-2" style="flex-wrap: wrap;">
+              <div class="hud-layer-switchers" style="display: inline-flex;">
+                <button class="hud-btn active" id="filter-all" onclick="filterMapNodes('all')">All</button>
+                <button class="hud-btn" id="filter-donor" onclick="filterMapNodes('donor')"><span class="legend-dot dot-donor"></span> Donors</button>
+                <button class="hud-btn" id="filter-ngo" onclick="filterMapNodes('ngo')"><span class="legend-dot dot-ngo"></span> Shelters</button>
+                <button class="hud-btn" id="filter-plant" onclick="filterMapNodes('plant')"><span class="legend-dot dot-plant"></span> Biogas</button>
+              </div>
+              <button class="btn btn-sm btn-secondary" onclick="simulateVehicleRun()"><i class="fa-solid fa-truck-fast"></i> Test Van GPS</button>
+              <div id="route-eta-badge" class="badge badge-route" style="display: none;">ETA: 18 mins</div>
+            </div>
           </div>
-          <div class="panel-body">
-            <ul class="feature-checklist">
-              <li><i class="fa-solid fa-check text-success"></i> <strong>Dynamic Pricing Engine:</strong> Automates 20% &rarr; 50% &rarr; 70% discount ladder for bakeries/supermarkets.</li>
-              <li><i class="fa-solid fa-check text-success"></i> <strong>Geospatial SOS Routing:</strong> Leaflet & OpenStreetMap routing engine matches closest orphanages & shelters.</li>
-              <li><i class="fa-solid fa-check text-success"></i> <strong>Rules-Based AI Shelf Life:</strong> Evaluates food category, temperature degradation, and prep timestamps.</li>
-              <li><i class="fa-solid fa-check text-success"></i> <strong>Closed-Loop Recycling:</strong> Tracks unsafe waste conversions into biogas and organic fertilizer.</li>
-              <li><i class="fa-solid fa-check text-success"></i> <strong>80G Corporate Sustainability:</strong> Instant PDF-ready tax deduction receipts.</li>
-            </ul>
+          <div class="panel-body p-0">
+            <div id="rescue-map" class="rescue-map-container" style="height: 520px;"></div>
+          </div>
+          <div class="map-legend">
+            <div class="legend-item"><span class="legend-dot dot-donor"></span> Donor Location</div>
+            <div class="legend-item"><span class="legend-dot dot-ngo"></span> Orphanage / Shelter</div>
+            <div class="legend-item"><span class="legend-dot dot-plant"></span> Biogas / Compost Hub</div>
+            <div class="legend-item"><span class="legend-line"></span> Priority Rescue Route</div>
+            <div class="legend-item" style="margin-left: auto; color: #10b981; font-weight: 600;"><i class="fa-solid fa-circle-check"></i> 100% Free Open-Source Map</div>
           </div>
         </div>
+
       </div>
     </section>
 
@@ -394,32 +483,44 @@
           </div>
         </div>
 
-        <!-- Live Leaflet Map & Routing View -->
+        <!-- NGO Fleet & Shelter Registry Column -->
         <div class="map-column">
-          <div class="panel h-100">
-            <div class="panel-header" style="flex-wrap: wrap; gap: 8px;">
-              <div class="d-flex align-items-center gap-2">
-                <h3><i class="fa-solid fa-map-location-dot"></i> Live Routing & Rescue Distance Matrix</h3>
-              </div>
-              <div class="d-flex align-items-center gap-2" style="flex-wrap: wrap;">
-                <div class="hud-layer-switchers" style="display: inline-flex;">
-                  <button class="hud-btn active" id="filter-all" onclick="filterMapNodes('all')">All</button>
-                  <button class="hud-btn" id="filter-donor" onclick="filterMapNodes('donor')"><span class="legend-dot dot-donor"></span> Donors</button>
-                  <button class="hud-btn" id="filter-ngo" onclick="filterMapNodes('ngo')"><span class="legend-dot dot-ngo"></span> Shelters</button>
-                  <button class="hud-btn" id="filter-plant" onclick="filterMapNodes('plant')"><span class="legend-dot dot-plant"></span> Biogas</button>
+          <div class="panel mb-3">
+            <div class="panel-header bg-workflow-header">
+              <h3><i class="fa-solid fa-truck-ramp-box text-primary"></i> Active Rescue Fleet & Dispatch Units</h3>
+              <button class="btn btn-sm btn-primary" onclick="switchTab('tab-overview')">
+                <i class="fa-solid fa-map-location-dot"></i> View Live Map
+              </button>
+            </div>
+            <div class="panel-body">
+              <div class="fleet-grid d-flex flex-column gap-2">
+                <div class="p-3 bg-dark-card border-card rounded">
+                  <div class="d-flex justify-content-between">
+                    <strong>🚐 Van #TN-02-FC-4421 (Chennai Metro Hub)</strong>
+                    <span class="badge badge-success">On Duty &bull; GPS Active</span>
+                  </div>
+                  <div class="text-muted mt-1" style="font-size: 12px;">Assigned to Karunai Illam &bull; Insulated Hot-Food Boxes (150 Servings)</div>
                 </div>
-                <button class="btn btn-sm btn-secondary" onclick="simulateVehicleRun()"><i class="fa-solid fa-truck-fast"></i> Test Van GPS</button>
-                <div id="route-eta-badge" class="badge badge-route" style="display: none;">ETA: 18 mins</div>
+
+                <div class="p-3 bg-dark-card border-card rounded">
+                  <div class="d-flex justify-content-between">
+                    <strong>🚐 Van #AP-31-FC-1092 (Visakhapatnam Hub)</strong>
+                    <span class="badge badge-success">Ready for Dispatch</span>
+                  </div>
+                  <div class="text-muted mt-1" style="font-size: 12px;">Assigned to Prema Samajam Care &bull; Beach Rd to Dabagardens Corridor</div>
+                </div>
               </div>
             </div>
-            <div class="panel-body p-0">
-              <div id="rescue-map" class="rescue-map-container"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h3><i class="fa-solid fa-hand-holding-heart text-success"></i> Registered Partner Shelters & Orphanages</h3>
             </div>
-            <div class="map-legend">
-              <div class="legend-item"><span class="legend-dot dot-donor"></span> Donor Location</div>
-              <div class="legend-item"><span class="legend-dot dot-ngo"></span> Orphanage / Shelter</div>
-              <div class="legend-item"><span class="legend-dot dot-plant"></span> Biogas / Compost Hub</div>
-              <div class="legend-item"><span class="legend-line"></span> Priority Rescue Route</div>
+            <div class="panel-body">
+              <div class="shelters-registry-list d-flex flex-column gap-2" id="shelters-list-display">
+                <!-- Injected by JS -->
+              </div>
             </div>
           </div>
         </div>

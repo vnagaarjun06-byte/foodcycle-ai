@@ -416,6 +416,26 @@ async function loadSosAlerts() {
       focusSosRoute(json.data[0].id);
     }
 
+    // Populate Partner Shelters Registry in Tab 4
+    const sheltersContainer = document.getElementById('shelters-list-display');
+    if (sheltersContainer) {
+      const sampleShelters = [
+        { name: 'Karunai Illam Orphanage', address: 'Anna Nagar, Chennai', capacity: 65, contact: '+91 98765 43210' },
+        { name: 'Anbalayam Senior Care Home', address: 'T. Nagar, Chennai', capacity: 45, contact: '+91 98412 11223' },
+        { name: 'Sneha Shelter for Homeless', address: 'Vadapalani, Chennai', capacity: 80, contact: '+91 94440 98765' },
+        { name: 'Prema Samajam Care & Shelter', address: 'Dabagardens, Visakhapatnam', capacity: 75, contact: '+91 891 256 7890' }
+      ];
+      sheltersContainer.innerHTML = sampleShelters.map(s => `
+        <div class="p-3 bg-dark-card border-card rounded">
+          <div class="d-flex justify-content-between">
+            <strong>${escapeHtml(s.name)}</strong>
+            <span class="badge badge-success">Verified Partner</span>
+          </div>
+          <div class="text-muted mt-1" style="font-size: 12px;">${escapeHtml(s.address)} &bull; Capacity: ${s.capacity} beds &bull; Phone: ${s.contact}</div>
+        </div>
+      `).join('');
+    }
+
   } catch (err) {
     console.error('Failed to load SOS alerts:', err);
   }
@@ -748,8 +768,9 @@ window.focusSosRoute = function(foodId) {
   document.querySelectorAll('.sos-item').forEach(el => el.classList.remove('active-route'));
   document.getElementById(`sos-card-${foodId}`)?.classList.add('active-route');
   if (typeof switchTab === 'function') {
-    switchTab('tab-ngo');
+    switchTab('tab-overview');
   }
+  document.getElementById('rescue-map')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   if (typeof drawRouteOnMap === 'function') {
     drawRouteOnMap(foodId, true);
   }
@@ -875,11 +896,11 @@ window.runLiveRescueVisionWalkthrough = async function() {
   await sleep(2800);
 
   // Step 3: Urgent SOS Stage & GPS Map
-  switchTab('tab-ngo');
+  switchTab('tab-overview');
   highlightProcessStep(3);
   playChime('sos');
   showToast('🚨 Stage 3: Urgency window (<5h) hit! Smart SOS triggers priority routing to Orphanage!', 'error');
-  await sleep(1200);
+  await sleep(1000);
 
   if (appState.sosAlerts && appState.sosAlerts.length > 0) {
     const alert = appState.sosAlerts[0];

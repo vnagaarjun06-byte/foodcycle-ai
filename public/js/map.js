@@ -66,12 +66,20 @@ function initRescueMap() {
   // Zoom control top right
   L.control.zoom({ position: 'topright' }).addTo(mapInstance);
 
-  // Layers setup
   radarLayer = L.layerGroup().addTo(mapInstance);
   routeLayer = L.layerGroup().addTo(mapInstance);
   markersLayer = L.layerGroup().addTo(mapInstance);
 
   setupMapControls();
+
+  // Ensure map tiles settle properly
+  setTimeout(() => {
+    if (mapInstance) mapInstance.invalidateSize();
+  }, 250);
+
+  window.addEventListener('resize', () => {
+    if (mapInstance) mapInstance.invalidateSize();
+  });
 }
 
 // Map UI Controls (100% Free Layer switchers, filters, city jumps, reset)
