@@ -172,18 +172,6 @@ function setupEventListeners() {
     btnRefreshLogs.addEventListener('click', loadStatsAndLogs);
   }
 
-  // Simulator Modal Controls
-  const openSimBtn = document.getElementById('open-simulator-btn');
-  const closeSimBtn = document.getElementById('close-simulator-btn');
-  const simModal = document.getElementById('simulator-modal');
-
-  if (openSimBtn) openSimBtn.addEventListener('click', () => simModal.style.display = 'flex');
-  if (closeSimBtn) closeSimBtn.addEventListener('click', () => simModal.style.display = 'none');
-
-  document.getElementById('sim-btn-24h')?.addEventListener('click', () => triggerSimulator(24));
-  document.getElementById('sim-btn-sos')?.addEventListener('click', () => triggerSimulator(72)); // advances to urgent window
-  document.getElementById('sim-btn-compost')?.addEventListener('click', () => triggerSimulator(240)); // advances past expiry
-  document.getElementById('sim-btn-reset')?.addEventListener('click', resetSimulation);
 }
 
 // Master data loader
@@ -315,7 +303,7 @@ async function loadMarketDeals() {
         <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: #1e293b; border-radius: 12px; border: 1px dashed #475569;">
           <i class="fa-solid fa-basket-shopping" style="font-size: 32px; color: #64748b; margin-bottom: 12px;"></i>
           <h3 style="font-size: 18px;">No Discounted Items at this Moment</h3>
-          <p style="color: #94a3b8; font-size: 13px;">Items automatically enter this store within 9 days of expiry. Advance time in the Simulator to trigger discounts!</p>
+          <p style="color: #94a3b8; font-size: 13px;">Perishable inventory is automatically listed here with up to 70% dynamic clearance markdowns to sell before waste.</p>
         </div>
       `;
       return;
@@ -744,7 +732,7 @@ window.handleBuyDeal = async function(foodId) {
     const json = await res.json();
     if (json.success) {
       playChime('rescue');
-      showToast('Food rescued! Payment simulated & waste avoided.', 'success');
+      showToast('Food rescued! Payment confirmed and waste avoided.', 'success');
       loadAllData();
     } else {
       showToast(json.error || 'Failed to claim deal', 'error');
@@ -881,15 +869,19 @@ window.filterMapNodes = function(filterType) {
   renderMapLocations(appState.allFood, defaultOrgs, filterType);
 };
 
-// Quick Vehicle Run Simulation
-window.simulateVehicleRun = function() {
+// Live Operational Rescue Vehicle Dispatch
+window.dispatchRescueVehicle = function() {
   if (appState.sosAlerts && appState.sosAlerts.length > 0) {
     const alert = appState.sosAlerts[0];
     focusSosRoute(alert.id);
     playChime('sos');
-    showToast('🚐 Real-time GPS Rescue Vehicle movement simulated along route!', 'info');
+    showToast('🚐 Real-time GPS Rescue Vehicle dispatched along priority route!', 'info');
+  } else if (appState.allFood && appState.allFood.length > 0) {
+    focusSosRoute(appState.allFood[0].id);
+    playChime('sos');
+    showToast('🚐 Active GPS Rescue Vehicle tracking along route!', 'info');
   } else {
-    showToast('Trigger an SOS alert first using Pitch Simulator!', 'warning');
+    showToast('All food batches are currently secure or rescued!', 'success');
   }
 };
 

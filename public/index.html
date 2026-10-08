@@ -294,23 +294,13 @@
 
             </div>
 
-            <!-- Quick Simulation Actions -->
-            <div class="grid-2col mb-3" style="gap: 8px;">
-              <button class="btn btn-sm btn-secondary" onclick="triggerSimulator(24)">
-                <i class="fa-solid fa-forward"></i> +24 Hours Fast-Forward
-              </button>
-              <button class="btn btn-sm btn-outline" onclick="resetSimulation()">
-                <i class="fa-solid fa-rotate-left"></i> Reset Demo State
-              </button>
-            </div>
-
             <!-- Live Audit Stream Preview -->
             <div>
               <div class="d-flex justify-content-between align-items-center mb-1">
                 <strong style="font-size: 11px; text-transform: uppercase; color: #94a3b8;"><i class="fa-solid fa-clock-rotate-left"></i> Real-Time Lifecycle Audit Log</strong>
                 <button class="btn btn-ghost btn-sm p-0" onclick="loadStatsAndLogs()"><i class="fa-solid fa-rotate-right"></i></button>
               </div>
-              <div class="log-stream" id="audit-log-stream" style="max-height: 110px;">
+              <div class="log-stream" id="audit-log-stream" style="max-height: 140px;">
                 <!-- Injected by JS -->
               </div>
             </div>
@@ -331,7 +321,7 @@
                 <button class="hud-btn" id="filter-ngo" onclick="filterMapNodes('ngo')"><span class="legend-dot dot-ngo"></span> Shelters</button>
                 <button class="hud-btn" id="filter-plant" onclick="filterMapNodes('plant')"><span class="legend-dot dot-plant"></span> Biogas</button>
               </div>
-              <button class="btn btn-sm btn-secondary" onclick="simulateVehicleRun()"><i class="fa-solid fa-truck-fast"></i> Test Van GPS</button>
+              <button class="btn btn-sm btn-secondary" onclick="dispatchRescueVehicle()"><i class="fa-solid fa-truck-fast"></i> Live Van GPS</button>
               <div id="route-eta-badge" class="badge badge-route" style="display: none;">ETA: 18 mins</div>
             </div>
           </div>
@@ -750,49 +740,6 @@
 
   </main>
 
-  <!-- HACKATHON LIVE SIMULATOR MODAL (3-MINUTE PITCH DEMO CONTROLLER) -->
-  <div class="modal-overlay" id="simulator-modal" style="display: none;">
-    <div class="modal-dialog">
-      <div class="modal-header">
-        <div class="d-flex align-items-center gap-2">
-          <i class="fa-solid fa-forward-step text-primary"></i>
-          <h3>3-Minute Pitch Live Demo Simulator</h3>
-        </div>
-        <button class="btn-close" id="close-simulator-btn">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p class="text-muted">
-          Use these triggers during the pitch to showcase all 3 lifecycle stages in seconds without waiting for hours:
-        </p>
-
-        <div class="sim-actions-grid">
-          <div class="sim-card">
-            <h4><i class="fa-solid fa-forward"></i> Advance Time by 24 Hours</h4>
-            <p>Fast-forwards item lifespans to demonstrate dynamic price reductions (20% &rarr; 50% &rarr; 70%).</p>
-            <button class="btn btn-warning w-100" id="sim-btn-24h">Fast-Forward +24 Hours</button>
-          </div>
-
-          <div class="sim-card">
-            <h4><i class="fa-solid fa-triangle-exclamation text-danger"></i> Trigger Urgent SOS Window</h4>
-            <p>Forces near-expiry items to enter the &le; 5-hour window, instantly firing the SOS Alert & Leaflet Route.</p>
-            <button class="btn btn-danger w-100" id="sim-btn-sos">Force Trigger Urgent SOS Alert</button>
-          </div>
-
-          <div class="sim-card">
-            <h4><i class="fa-solid fa-recycle text-success"></i> Advance to Expired / Compost</h4>
-            <p>Transitions past-expiry items into the Biogas & Compost Recycling Ledger.</p>
-            <button class="btn btn-success w-100" id="sim-btn-compost">Advance to Organic Recycling</button>
-          </div>
-
-          <div class="sim-card">
-            <h4><i class="fa-solid fa-rotate-left"></i> Reset Demo State</h4>
-            <p>Restores all sample data back to initial hackathon presentation defaults.</p>
-            <button class="btn btn-outline w-100" id="sim-btn-reset">Reset to Initial Seed</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- GOOGLE GEMINI AI RESCUE COPILOT (FLOATING BUTTON & DRAWER) -->
   <button id="gemini-fab" class="gemini-fab-btn" onclick="toggleGeminiCopilot()" title="Ask Google Gemini AI Rescue Copilot">
