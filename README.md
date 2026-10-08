@@ -1,8 +1,10 @@
 # 🌿 FoodCycle AI – Smart Expiry-Based Rescue Network
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/vnagaarjun06-byte/foodcycle-ai)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-v18%2B-green.svg)](https://nodejs.org)
+[![Google Maps](https://img.shields.io/badge/Google_Maps-Platform-4285F4.svg)](https://mapsplatform.google.com/)
+[![Google Gemini](https://img.shields.io/badge/Google_Gemini-AI_Copilot-9B51E0.svg)](https://ai.google.dev/)
 
 > **Key Value Proposition:**  
 > **Sell it before waste &rarr; Donate it when urgent &rarr; Recycle it when unsafe.**
