@@ -69,6 +69,8 @@ function initRescueMap() {
   setupMapControls();
 }
 
+let arcGisApiKey = localStorage.getItem('arcgis_api_key') || '';
+
 // Map UI Controls (Layer switchers, filters, reset)
 function setupMapControls() {
   const mapContainer = document.getElementById('rescue-map');
@@ -84,9 +86,13 @@ function setupMapControls() {
         <button class="hud-btn active" id="btn-layer-dark" onclick="switchMapLayer('dark')"><i class="fa-solid fa-moon"></i> Dark</button>
         <button class="hud-btn" id="btn-layer-street" onclick="switchMapLayer('street')"><i class="fa-solid fa-map"></i> Street</button>
         <button class="hud-btn" id="btn-layer-sat" onclick="switchMapLayer('satellite')"><i class="fa-solid fa-satellite"></i> Satellite</button>
+        <button class="hud-btn" id="btn-layer-arcgis" onclick="switchMapLayer('arcgis')"><i class="fa-solid fa-globe"></i> ArcGIS</button>
       </div>
-      <div class="hud-actions">
-        <button class="hud-btn" onclick="resetMapCamera()" title="Reset Center View"><i class="fa-solid fa-crosshairs"></i> Center</button>
+      <div class="hud-actions d-flex gap-1">
+        <button class="hud-btn" onclick="openArcGisKeyModal()" title="Configure ArcGIS API Key"><i class="fa-solid fa-key"></i> Key</button>
+        <button class="hud-btn" onclick="switchMapCity('vizag')" title="Switch to Visakhapatnam [17.6868, 83.2185]"><i class="fa-solid fa-location-crosshairs"></i> Vizag</button>
+        <button class="hud-btn" onclick="switchMapCity('chennai')" title="Switch to Chennai [13.0600, 80.2200]">Chennai</button>
+        <button class="hud-btn" onclick="resetMapCamera()" title="Reset Center View"><i class="fa-solid fa-crosshairs"></i></button>
       </div>
     </div>
 
@@ -117,16 +123,173 @@ function setupMapControls() {
   mapContainer.appendChild(hud);
 }
 
-// Switch between Dark, Street, Satellite base layers
+// Switch between Dark, Street, Satellite, and ArcGIS Vector base layers
 window.switchMapLayer = function(layerKey) {
-  if (!mapInstance || !tileLayers[layerKey]) return;
+  if (!mapInstance) return;
 
-  Object.values(tileLayers).forEach(layer => mapInstance.removeLayer(layer));
-  tileLayers[layerKey].addTo(mapInstance);
+  // Remove existing base layers
+  Object.values(tileLayers).forEach(layer => {
+    if (layer && mapInstance.hasLayer(layer)) {
+      mapInstance.removeLayer(layer);
+    }
+  });
+
+  if (layerKey === 'arcgis') {
+    try {
+      if (arcGisApiKey && window.L && L.esri && L.esri.Vector && L.esri.Vector.vectorBasemapLayer) {
+        tileLayers.arcgis = L.esri.Vector.vectorBasemapLayer("ArcGIS:Streets", { apiKey: arcGisApiKey });
+      } else if (window.L && L.esri && L.esri.basemapLayer) {
+        tileLayers.arcgis = L.esri.basemapLayer('Streets');
+      } else {
+        tileLayers.arcgis = tileLayers.street;
+      }
+      tileLayers.arcgis.addTo(mapInstance);
+      if (typeof showToast === 'function') {
+        showToast(arcGisApiKey ? 'ArcGIS Vector Streets layer loaded with your API Key!' : 'Esri ArcGIS Streets basemap activated.', 'info');
+      }
+    } catch (e) {
+      console.warn('Esri Vector fallback to street tiles:', e);
+      tileLayers.street.addTo(mapInstance);
+    }
+  } else if (tileLayers[layerKey]) {
+    tileLayers[layerKey].addTo(mapInstance);
+  }
+
   activeTileKey = layerKey;
-
   document.querySelectorAll('.hud-layer-switchers .hud-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(`btn-layer-${layerKey === 'satellite' ? 'sat' : layerKey}`)?.classList.add('active');
+};
+
+// Switch between cities (including Visakhapatnam [17.6868, 83.2185]!)
+window.switchMapCity = function(city) {
+  if (!mapInstance) return;
+
+  if (city === 'vizag') {
+    const vizagCenter = [17.6868, 83.2185];
+    mapInstance.setView(vizagCenter, 13);
+
+    // Render Visakhapatnam sample rescue points if not already present
+    renderVizagRescueNodes();
+    if (typeof showToast === 'function') {
+      showToast('📍 Map centered on Visakhapatnam [17.6868, 83.2185]', 'success');
+    }
+  } else {
+    mapInstance.setView([13.0600, 80.2200], 12);
+    if (typeof showToast === 'function') {
+      showToast('📍 Map centered on Chennai urban network', 'info');
+    }
+  }
+};
+
+// Render Visakhapatnam rescue nodes
+function renderVizagRescueNodes() {
+  if (!markersLayer) return;
+  markersLayer.clearLayers();
+  radarLayer.clearLayers();
+
+  const vizagDonor = {
+    title: '60 Servings Veg Pulao & Dal Tadka',
+    donorName: 'Grand Beach Bay Banquet',
+    donorAddress: 'RK Beach Rd, Visakhapatnam',
+    lat: 17.7120,
+    lng: 83.3180,
+    quantity: 60,
+    unit: 'servings',
+    storageTemp: 29
+  };
+
+  const vizagOrphanage = {
+    name: 'Prema Samajam Care & Shelter',
+    address: 'Dabagardens, Visakhapatnam',
+    lat: 17.7155,
+    lng: 83.2980,
+    type: 'orphanage',
+    capacity: 75,
+    contact: '+91 891 256 7890'
+  };
+
+  const vizagBiogas = {
+    name: 'GVMC Clean Energy Bio-Digester Hub',
+    address: 'Kapuluppada Waste Processing Park, Visakhapatnam',
+    lat: 17.8200,
+    lng: 83.3600,
+    type: 'biogas_plant',
+    dailyCapacityKg: 5000
+  };
+
+  // Add markers
+  const donorIcon = createCustomIcon('donor', 'fa-solid fa-bell');
+  const ngoIcon = createCustomIcon('ngo', 'fa-solid fa-house-chimney');
+  const plantIcon = createCustomIcon('plant', 'fa-solid fa-seedling');
+
+  L.marker([vizagDonor.lat, vizagDonor.lng], { icon: donorIcon })
+    .bindPopup(`<div class="map-popup-card"><span class="badge badge-sos mb-1">VIZAG SOS ACTIVE</span><h4>${vizagDonor.title}</h4><p>${vizagDonor.donorName}</p></div>`)
+    .addTo(markersLayer);
+
+  L.marker([vizagOrphanage.lat, vizagOrphanage.lng], { icon: ngoIcon })
+    .bindPopup(`<div class="map-popup-card"><span class="badge badge-success mb-1">ORPHANAGE</span><h4>${vizagOrphanage.name}</h4><p>${vizagOrphanage.address}</p></div>`)
+    .addTo(markersLayer);
+
+  L.marker([vizagBiogas.lat, vizagBiogas.lng], { icon: plantIcon })
+    .bindPopup(`<div class="map-popup-card"><span class="badge badge-warning mb-1">BIOGAS HUB</span><h4>${vizagBiogas.name}</h4><p>${vizagBiogas.address}</p></div>`)
+    .addTo(markersLayer);
+
+  // Radar circle around Vizag donor
+  L.circle([vizagDonor.lat, vizagDonor.lng], {
+    radius: 3000,
+    color: '#ef4444',
+    fillColor: '#ef4444',
+    fillOpacity: 0.1,
+    weight: 1,
+    dashArray: '4, 4'
+  }).addTo(radarLayer);
+
+  // Draw smooth sample rescue route across Vizag
+  const vizagRoute = [
+    [vizagDonor.lat, vizagDonor.lng],
+    [17.7135, 83.3100],
+    [17.7142, 83.3040],
+    [vizagOrphanage.lat, vizagOrphanage.lng]
+  ];
+
+  routeLayer.clearLayers();
+  L.polyline(vizagRoute, { color: '#ef4444', weight: 8, opacity: 0.4 }).addTo(routeLayer);
+  L.polyline(vizagRoute, { color: '#dc2626', weight: 4, dashArray: '6, 6' }).addTo(routeLayer);
+
+  // Setup mission and start vehicle
+  currentMission = {
+    active: true,
+    routeCoords: vizagRoute,
+    currentStep: 0,
+    distanceKm: 2.8,
+    estimatedMinutes: 8,
+    donorName: vizagDonor.donorName,
+    recipientName: vizagOrphanage.name,
+    title: vizagDonor.title
+  };
+  updateTelemetryHUD();
+  startAnimatedVehicle();
+}
+
+// Interactive prompt for user's ArcGIS API Key
+window.openArcGisKeyModal = function() {
+  const currentKey = arcGisApiKey || '';
+  const newKey = prompt('Enter your ArcGIS API Key (from developer.arcgis.com):', currentKey);
+  if (newKey !== null) {
+    arcGisApiKey = newKey.trim();
+    localStorage.setItem('arcgis_api_key', arcGisApiKey);
+    if (arcGisApiKey) {
+      if (typeof showToast === 'function') {
+        showToast('ArcGIS API Key saved! Switching to ArcGIS Vector layer...', 'success');
+      }
+      switchMapLayer('arcgis');
+    } else {
+      if (typeof showToast === 'function') {
+        showToast('API Key cleared. Using free standard basemap.', 'info');
+      }
+      switchMapLayer('dark');
+    }
+  }
 };
 
 window.resetMapCamera = function() {
