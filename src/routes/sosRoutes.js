@@ -84,12 +84,27 @@ router.get('/route/:foodId', (req, res) => {
   const recipientCoord = recipient ? [recipient.lat, recipient.lng] : [13.0850, 80.2100];
   const distanceKm = calculateDistanceKm(donorCoord[0], donorCoord[1], recipientCoord[0], recipientCoord[1]);
 
-  // Intermediate simulated waypoint for smooth visual route polyline
-  const midLat = (donorCoord[0] + recipientCoord[0]) / 2 + 0.003;
-  const midLng = (donorCoord[1] + recipientCoord[1]) / 2 - 0.002;
+  // Generate realistic smooth intermediate waypoints for animated GPS navigation
+  const numSteps = 8;
+  const polyline = [];
+  polyline.push(donorCoord);
+  for (let i = 1; i < numSteps; i++) {
+    const fraction = i / numSteps;
+    const lat = donorCoord[0] + (recipientCoord[0] - donorCoord[0]) * fraction;
+    const lng = donorCoord[1] + (recipientCoord[1] - donorCoord[1]) * fraction;
+    // Slight realistic sinusoidal curve reflecting urban road grids
+    const offsetLat = Math.sin(fraction * Math.PI) * 0.0035;
+    const offsetLng = Math.sin(fraction * Math.PI) * -0.0025;
+    polyline.push([Number((lat + offsetLat).toFixed(5)), Number((lng + offsetLng).toFixed(5))]);
+  }
+  polyline.push(recipientCoord);
 
   res.json({
     success: true,
+    foodId: food.id,
+    status: food.status,
+    title: food.title,
+    quantity: `${food.quantity} ${food.unit}`,
     donor: {
       name: food.donorName,
       address: food.donorAddress,
@@ -101,12 +116,8 @@ router.get('/route/:foodId', (req, res) => {
       coords: recipientCoord
     },
     distanceKm,
-    estimatedMinutes: Math.round(distanceKm * 4.2), // Average city speed ~ 15-20 km/h
-    routePolyline: [
-      donorCoord,
-      [midLat, midLng],
-      recipientCoord
-    ]
+    estimatedMinutes: Math.max(5, Math.round(distanceKm * 3.8)),
+    routePolyline: polyline
   });
 });
 

@@ -71,6 +71,41 @@
   <!-- Main Content Container -->
   <main class="main-content">
 
+    <!-- Real-Time Vision & Working Process Pipeline -->
+    <div class="process-vision-bar">
+      <div class="process-steps-track">
+        <div class="p-step" onclick="switchTab('tab-donor')">
+          <span class="p-step-num">1</span>
+          <span><i class="fa-solid fa-box-open"></i> 1. Log Surplus</span>
+        </div>
+        <span class="p-divider"><i class="fa-solid fa-chevron-right"></i></span>
+        <div class="p-step" onclick="switchTab('tab-market')">
+          <span class="p-step-num">2</span>
+          <span><i class="fa-solid fa-tags"></i> 2. Dynamic 20% &rarr; 70%</span>
+        </div>
+        <span class="p-divider"><i class="fa-solid fa-chevron-right"></i></span>
+        <div class="p-step active-sos" onclick="switchTab('tab-ngo')">
+          <span class="p-step-num">3</span>
+          <span><i class="fa-solid fa-truck-fast"></i> 3. SOS Route & Dispatch</span>
+        </div>
+        <span class="p-divider"><i class="fa-solid fa-chevron-right"></i></span>
+        <div class="p-step" onclick="switchTab('tab-recycle')">
+          <span class="p-step-num">4</span>
+          <span><i class="fa-solid fa-seedling"></i> 4. Biogas Ledger</span>
+        </div>
+        <span class="p-divider"><i class="fa-solid fa-chevron-right"></i></span>
+        <div class="p-step" onclick="switchTab('tab-tax')">
+          <span class="p-step-num">5</span>
+          <span><i class="fa-solid fa-receipt"></i> 5. 80G Certificate</span>
+        </div>
+      </div>
+      <div>
+        <button class="btn btn-demo-walkthrough" id="btn-run-live-vision">
+          <i class="fa-solid fa-circle-play"></i> Run Live Rescue Vision Demo
+        </button>
+      </div>
+    </div>
+
     <!-- TAB 1: OVERVIEW & ESG IMPACT -->
     <section id="tab-overview" class="tab-pane active">
       <!-- Pitch Banner -->
@@ -362,9 +397,20 @@
         <!-- Live Leaflet Map & Routing View -->
         <div class="map-column">
           <div class="panel h-100">
-            <div class="panel-header">
-              <h3><i class="fa-solid fa-map-location-dot"></i> Live Routing & Rescue Distance Matrix</h3>
-              <div id="route-eta-badge" class="badge badge-route" style="display: none;">ETA: 18 mins</div>
+            <div class="panel-header" style="flex-wrap: wrap; gap: 8px;">
+              <div class="d-flex align-items-center gap-2">
+                <h3><i class="fa-solid fa-map-location-dot"></i> Live Routing & Rescue Distance Matrix</h3>
+              </div>
+              <div class="d-flex align-items-center gap-2" style="flex-wrap: wrap;">
+                <div class="hud-layer-switchers" style="display: inline-flex;">
+                  <button class="hud-btn active" id="filter-all" onclick="filterMapNodes('all')">All</button>
+                  <button class="hud-btn" id="filter-donor" onclick="filterMapNodes('donor')"><span class="legend-dot dot-donor"></span> Donors</button>
+                  <button class="hud-btn" id="filter-ngo" onclick="filterMapNodes('ngo')"><span class="legend-dot dot-ngo"></span> Shelters</button>
+                  <button class="hud-btn" id="filter-plant" onclick="filterMapNodes('plant')"><span class="legend-dot dot-plant"></span> Biogas</button>
+                </div>
+                <button class="btn btn-sm btn-secondary" onclick="simulateVehicleRun()"><i class="fa-solid fa-truck-fast"></i> Test Van GPS</button>
+                <div id="route-eta-badge" class="badge badge-route" style="display: none;">ETA: 18 mins</div>
+              </div>
             </div>
             <div class="panel-body p-0">
               <div id="rescue-map" class="rescue-map-container"></div>

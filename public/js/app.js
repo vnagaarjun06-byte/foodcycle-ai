@@ -27,7 +27,101 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Periodic refresh every 15s
   setInterval(loadAllData, 15000);
+
+  // Real-time second-by-second countdown updater for live vision
+  setInterval(updateLiveCountdowns, 1000);
+
+  // Hook Live Vision Walkthrough button
+  document.getElementById('btn-run-live-vision')?.addEventListener('click', runLiveRescueVisionWalkthrough);
 });
+
+// Helper for switching tabs programmatically or from UI
+window.switchTab = function(tabPaneId) {
+  document.querySelectorAll('.nav-tab').forEach(t => {
+    if (t.dataset.tab === tabPaneId) {
+      t.classList.add('active');
+    } else {
+      t.classList.remove('active');
+    }
+  });
+
+  document.querySelectorAll('.tab-pane').forEach(p => {
+    if (p.id === tabPaneId) {
+      p.classList.add('active');
+    } else {
+      p.classList.remove('active');
+    }
+  });
+
+  // Highlight step bar
+  const stepMap = {
+    'tab-donor': 1,
+    'tab-market': 2,
+    'tab-ngo': 3,
+    'tab-recycle': 4,
+    'tab-tax': 5
+  };
+  highlightProcessStep(stepMap[tabPaneId] || 1);
+
+  // Invalidate Leaflet map size when switching to map tab
+  if (tabPaneId === 'tab-ngo') {
+    setTimeout(() => {
+      if (typeof mapInstance !== 'undefined' && mapInstance) {
+        mapInstance.invalidateSize();
+      } else if (typeof initRescueMap === 'function') {
+        initRescueMap();
+      }
+    }, 150);
+  }
+};
+
+function highlightProcessStep(stepNum) {
+  document.querySelectorAll('.process-steps-track .p-step').forEach((el, idx) => {
+    if (idx + 1 === stepNum) {
+      el.classList.add('active');
+    } else {
+      el.classList.remove('active');
+    }
+  });
+}
+
+// Audio Feedback Chimes using Web Audio API
+function playChime(type) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    if (type === 'sos') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.35);
+    } else if (type === 'delivery') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+      osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.12);
+      osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.24);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.5);
+    } else if (type === 'rescue') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(440, ctx.currentTime);
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.25);
+    }
+  } catch(e) {}
+}
 
 // Setup tab navigation
 function setupNavigation() {
@@ -230,7 +324,7 @@ async function loadMarketDeals() {
               <span style="font-size: 12px; color: #10b981; font-weight: 700;">Save ₹${deal.savingsAmount}</span>
             </div>
             <div class="deal-meta">
-              <span><i class="fa-regular fa-clock"></i> ${deal.remainingDays} days left</span>
+              <span class="live-countdown" data-expiry="${deal.expiryDate}"><i class="fa-regular fa-clock"></i> ${deal.remainingDays} days left</span>
               <span><i class="fa-solid fa-leaf"></i> Diversion: ${deal.co2SavedKg}kg CO2e</span>
             </div>
             <button class="btn btn-warning w-100" onclick="handleBuyDeal('${deal.id}')">
@@ -240,6 +334,8 @@ async function loadMarketDeals() {
         </div>
       `;
     }).join('');
+
+    updateLiveCountdowns();
 
   } catch (err) {
     console.error('Failed to load market deals:', err);
@@ -612,6 +708,7 @@ window.handleBuyDeal = async function(foodId) {
     });
     const json = await res.json();
     if (json.success) {
+      playChime('rescue');
       showToast('Food rescued! Payment simulated & waste avoided.', 'success');
       loadAllData();
     } else {
@@ -632,7 +729,10 @@ window.handleClaimSos = async function(foodId, recipientId) {
     });
     const json = await res.json();
     if (json.success) {
-      showToast(`Donation claimed! 80G Receipt #${json.taxReceipt.receiptId} generated!`, 'success');
+      playChime('delivery');
+      showToast(`Donation claimed! 80G Receipt #${json.taxReceipt.receiptId} generated! Vehicle dispatched!`, 'success');
+      // Switch focus to map and animate van!
+      focusSosRoute(foodId);
       loadAllData();
     } else {
       showToast(json.error || 'Failed to claim donation', 'error');
@@ -647,7 +747,12 @@ window.focusSosRoute = function(foodId) {
   appState.activeRouteFoodId = foodId;
   document.querySelectorAll('.sos-item').forEach(el => el.classList.remove('active-route'));
   document.getElementById(`sos-card-${foodId}`)?.classList.add('active-route');
-  drawRouteOnMap(foodId);
+  if (typeof switchTab === 'function') {
+    switchTab('tab-ngo');
+  }
+  if (typeof drawRouteOnMap === 'function') {
+    drawRouteOnMap(foodId, true);
+  }
 };
 
 // Certify Biogas Digestion
@@ -701,6 +806,104 @@ async function resetSimulation() {
   }
 }
 
+// Live Second-by-Second Countdown Updater for Dynamic Store deals
+function updateLiveCountdowns() {
+  const elements = document.querySelectorAll('.live-countdown');
+  const now = Date.now();
+
+  elements.forEach(el => {
+    const expiry = new Date(el.dataset.expiry).getTime();
+    const diff = expiry - now;
+
+    if (diff <= 0) {
+      el.innerHTML = '<span class="text-danger font-weight-bold">Expired (Compost Stage)</span>';
+      return;
+    }
+
+    const days = Math.floor(diff / (86400 * 1000));
+    const hours = Math.floor((diff % (86400 * 1000)) / (3600 * 1000));
+    const mins = Math.floor((diff % (3600 * 1000)) / (60 * 1000));
+    const secs = Math.floor((diff % (60 * 1000)) / 1000);
+
+    el.innerHTML = `<i class="fa-regular fa-clock text-warning"></i> <strong>${days}d ${hours}h ${mins}m ${secs}s</strong>`;
+  });
+}
+
+// Map Node Filter chips
+window.filterMapNodes = function(filterType) {
+  document.querySelectorAll('.hud-layer-switchers .hud-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`filter-${filterType}`)?.classList.add('active');
+
+  const defaultOrgs = [
+    { id: 'ngo-1', name: 'Karunai Illam Orphanage', type: 'orphanage', contact: '+91 98765 43210', address: 'Anna Nagar, Chennai', lat: 13.0850, lng: 80.2100 },
+    { id: 'ngo-2', name: 'Anbalayam Senior Care Home', type: 'old_age_home', contact: '+91 98412 11223', address: 'T. Nagar, Chennai', lat: 13.0418, lng: 80.2341 },
+    { id: 'ngo-3', name: 'Sneha Shelter for Homeless', type: 'shelter', contact: '+91 94440 98765', address: 'Vadapalani, Chennai', lat: 13.0524, lng: 80.2088 },
+    { id: 'plant-1', name: 'GreenEarth Biogas & Fertilizer Hub', type: 'biogas_plant', contact: '+91 91234 56789', address: 'Ambattur Industrial Estate', lat: 13.1143, lng: 80.1548 },
+    { id: 'plant-2', name: 'EcoBio Compost Solutions', type: 'compost_plant', contact: '+91 99887 76655', address: 'Guindy Industrial Area', lat: 13.0067, lng: 80.2025 }
+  ];
+
+  renderMapLocations(appState.allFood, defaultOrgs, filterType);
+};
+
+// Quick Vehicle Run Simulation
+window.simulateVehicleRun = function() {
+  if (appState.sosAlerts && appState.sosAlerts.length > 0) {
+    const alert = appState.sosAlerts[0];
+    focusSosRoute(alert.id);
+    playChime('sos');
+    showToast('🚐 Real-time GPS Rescue Vehicle movement simulated along route!', 'info');
+  } else {
+    showToast('Trigger an SOS alert first using Pitch Simulator!', 'warning');
+  }
+};
+
+// End-to-End Real-Time Rescue Vision Walkthrough Demo
+window.runLiveRescueVisionWalkthrough = async function() {
+  showToast('🚀 Launching Real-Time Closed-Loop Rescue Vision Demo!', 'info');
+  
+  // Step 1: Donor Stage
+  switchTab('tab-donor');
+  highlightProcessStep(1);
+  showToast('📦 Stage 1: Donor logs surplus biryani & sets temperature...', 'info');
+  await sleep(2500);
+
+  // Step 2: Dynamic Market Stage
+  switchTab('tab-market');
+  highlightProcessStep(2);
+  playChime('rescue');
+  showToast('🏷️ Stage 2: 9-Day Window &bull; Dynamic discount progressively drops 20% &rarr; 50% &rarr; 70%!', 'warning');
+  await sleep(2800);
+
+  // Step 3: Urgent SOS Stage & GPS Map
+  switchTab('tab-ngo');
+  highlightProcessStep(3);
+  playChime('sos');
+  showToast('🚨 Stage 3: Urgency window (<5h) hit! Smart SOS triggers priority routing to Orphanage!', 'error');
+  await sleep(1200);
+
+  if (appState.sosAlerts && appState.sosAlerts.length > 0) {
+    const alert = appState.sosAlerts[0];
+    focusSosRoute(alert.id);
+    await sleep(800);
+    showToast('🚐 Live Rescue Van dispatched! Watch real-time GPS telemetry on Leaflet Map...', 'info');
+  }
+  await sleep(4000);
+
+  // Step 4: Tax Exemption Certificate & ESG
+  switchTab('tab-tax');
+  highlightProcessStep(5);
+  playChime('delivery');
+  showToast('📜 Final Stage: Food delivered! Automated Section 80G Tax Exemption Certificate generated!', 'success');
+  
+  if (appState.receipts && appState.receipts.length > 0) {
+    selectReceipt(appState.receipts[0].receiptId);
+  }
+};
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 // Helpers
 function calculateRemainingHours(expiryDate) {
   const diffMs = new Date(expiryDate).getTime() - Date.now();
@@ -726,11 +929,12 @@ function showToast(message, type = 'info') {
   let icon = 'fa-info-circle';
   if (type === 'success') icon = 'fa-check-circle';
   if (type === 'error') icon = 'fa-triangle-exclamation';
+  if (type === 'warning') icon = 'fa-clock';
 
   toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${escapeHtml(message)}</span>`;
   container.appendChild(toast);
 
   setTimeout(() => {
     toast.remove();
-  }, 4000);
+  }, 4500);
 }
