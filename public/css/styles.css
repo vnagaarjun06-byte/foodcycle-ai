@@ -623,6 +623,25 @@ label {
   overflow-y: auto;
 }
 
+/* Donor Inventory List */
+.inventory-list {
+  max-height: 540px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 6px;
+}
+
+.inventory-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.inventory-list::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
 .log-item {
   background: #0f172a;
   padding: 10px 14px;

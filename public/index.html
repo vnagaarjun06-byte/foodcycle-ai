@@ -50,10 +50,10 @@
 
         <div class="pulse-indicator">
           <span class="pulse-dot"></span>
-          <span class="pulse-text">Live Engine</span>
+          <span class="pulse-text">Live Engine Active</span>
         </div>
-        <button class="btn btn-simulator" id="open-simulator-btn" title="Simulate 3-minute hackathon pitch flow">
-          <i class="fa-solid fa-forward-step"></i> Pitch Simulator
+        <button class="btn btn-secondary" onclick="loadAllData()" title="Sync and refresh all live data">
+          <i class="fa-solid fa-arrows-rotate"></i> Sync Data
         </button>
       </div>
     </div>
@@ -115,9 +115,10 @@
         </div>
       </div>
       <div>
-        <button class="btn btn-demo-walkthrough" id="btn-run-live-vision">
-          <i class="fa-solid fa-circle-play"></i> Run Live Rescue Vision Demo
-        </button>
+        <div class="live-network-pill" style="display: flex; align-items: center; gap: 8px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); padding: 8px 16px; border-radius: 20px; font-size: 12px; color: #10b981; font-weight: 700;">
+          <span class="pulse-dot"></span>
+          <span>Automated 24/7 Rescue Dispatch Active</span>
+        </div>
       </div>
     </div>
 
@@ -126,7 +127,7 @@
       <!-- Pitch Banner -->
       <div class="hero-banner">
         <div class="hero-content">
-          <span class="pill-badge">HACKATHON SHOWCASE • CLOSED-LOOP FOOD RESCUE</span>
+          <span class="pill-badge">PRODUCTION PLATFORM &bull; ZERO-WASTE RESCUE NETWORK</span>
           <h2>Sell it before waste &bull; Donate it when urgent &bull; Recycle it when unsafe.</h2>
           <p>
             FoodCycle AI eliminates food waste across catering services, marriage halls, bakeries, and canteens through real-time automated lifecycle transitions.

@@ -255,32 +255,44 @@ async function loadFoodInventory() {
     if (countBadge) countBadge.textContent = `${json.data.length} Items`;
 
     if (list) {
-      list.innerHTML = json.data.map(item => {
-        let badgeHtml = '<span class="badge badge-info">Logged</span>';
-        if (item.status === 'dynamic_discount') {
-          badgeHtml = `<span class="badge badge-discount">${item.discountTier}% OFF</span>`;
-        } else if (item.status === 'sos_donation') {
-          badgeHtml = '<span class="badge badge-sos">SOS Triggered</span>';
-        } else if (item.status === 'organic_recycling') {
-          badgeHtml = '<span class="badge badge-warning">Compost Ledger</span>';
-        } else if (item.status === 'claimed_donation') {
-          badgeHtml = '<span class="badge badge-success">Rescued (Donated)</span>';
-        }
+      if (!json.data || json.data.length === 0) {
+        list.innerHTML = '<div class="text-muted p-4 text-center">No inventory logged yet. Use the form on the left to add items!</div>';
+      } else {
+        list.innerHTML = json.data.map(item => {
+          let badgeHtml = '<span class="badge badge-info">Logged</span>';
+          let actionBtn = '';
 
-        return `
-          <div style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; margin-bottom: 8px;">
-            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
-              <strong style="font-size: 13px;">${escapeHtml(item.title)}</strong>
-              ${badgeHtml}
+          if (item.status === 'dynamic_discount') {
+            badgeHtml = `<span class="badge badge-discount">${item.discountTier || 20}% OFF</span>`;
+            actionBtn = `<button class="btn btn-sm btn-warning" onclick="switchTab('tab-market')"><i class="fa-solid fa-tags"></i> View in Store</button>`;
+          } else if (item.status === 'sos_donation') {
+            badgeHtml = '<span class="badge badge-sos">Urgent SOS (&le;5h)</span>';
+            actionBtn = `<button class="btn btn-sm btn-danger" onclick="switchTab('tab-ngo'); focusSosRoute('${item.id}')"><i class="fa-solid fa-truck-fast"></i> Track Route</button>`;
+          } else if (item.status === 'organic_recycling') {
+            badgeHtml = '<span class="badge badge-warning">Biogas Ledger</span>';
+            actionBtn = `<button class="btn btn-sm btn-success" onclick="switchTab('tab-recycle')"><i class="fa-solid fa-seedling"></i> Biogas Hub</button>`;
+          } else if (item.status === 'claimed_donation') {
+            badgeHtml = '<span class="badge badge-success">Delivered & Rescued</span>';
+            actionBtn = `<button class="btn btn-sm btn-outline" onclick="switchTab('tab-tax')"><i class="fa-solid fa-receipt"></i> 80G Receipt</button>`;
+          }
+
+          return `
+            <div style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; margin-bottom: 8px; transition: border-color 0.2s;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; gap: 8px;">
+                <strong style="font-size: 13px; color: #fff;">${escapeHtml(item.title)}</strong>
+                ${badgeHtml}
+              </div>
+              <div style="font-size: 11px; color: #94a3b8; display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
+                <span><i class="fa-solid fa-store text-primary"></i> ${escapeHtml(item.donorName)}</span>
+                <span><i class="fa-solid fa-box text-warning"></i> ${item.quantity} ${item.unit}</span>
+                <span><i class="fa-solid fa-indian-rupee-sign text-success"></i> ₹${item.estimatedValue}</span>
+                <span><i class="fa-solid fa-temperature-half text-danger"></i> ${item.storageTemp}°C</span>
+              </div>
+              ${actionBtn ? `<div style="display: flex; justify-content: flex-end; margin-top: 4px;">${actionBtn}</div>` : ''}
             </div>
-            <div style="font-size: 11px; color: #94a3b8; display: flex; gap: 12px;">
-              <span>Donor: ${escapeHtml(item.donorName)}</span>
-              <span>Qty: ${item.quantity} ${item.unit}</span>
-              <span>Value: ₹${item.estimatedValue}</span>
-            </div>
-          </div>
-        `;
-      }).join('');
+          `;
+        }).join('');
+      }
     }
   } catch (err) {
     console.error('Failed to load food inventory:', err);
@@ -928,7 +940,42 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Helpers
+// Core Utility Helpers
+function calculateRemainingHours(expiryDate) {
+  if (!expiryDate) return 0;
+  const diffMs = new Date(expiryDate).getTime() - Date.now();
+  return Math.max(0, Math.round(diffMs / (3600 * 1000)));
+}
+
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return str.toString()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  let icon = 'fa-info-circle';
+  if (type === 'success') icon = 'fa-check-circle';
+  if (type === 'error') icon = 'fa-triangle-exclamation';
+  if (type === 'warning') icon = 'fa-clock';
+
+  toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${escapeHtml(message)}</span>`;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.remove();
+  }, 4500);
+}
+
 // Demo Batches for Interactive Workflow Cockpit
 const DEMO_BATCHES = {
   'food-001': {
