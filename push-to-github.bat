@@ -1,5 +1,6 @@
 @echo off
 title Push FoodCycle AI to GitHub
+cd /d "%~dp0"
 set "PATH=%~dp0..\tools\mingit\cmd;%~dp0..\tools\mingit\bin;%PATH%"
 echo ====================================================
 echo FoodCycle AI - Push to GitHub Utility
