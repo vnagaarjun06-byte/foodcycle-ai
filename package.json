@@ -1,0 +1,28 @@
+{
+  "name": "foodcycle-ai",
+  "version": "1.0.0",
+  "description": "FoodCycle AI – Smart Expiry-Based Rescue Network: Dynamic Discounting, Smart SOS Auto-Donation, and Organic Waste Recycling Ledger",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "food-waste",
+    "ai",
+    "donation",
+    "sustainability",
+    "render",
+    "leaflet",
+    "express"
+  ],
+  "author": "FoodCycle AI Team",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}
