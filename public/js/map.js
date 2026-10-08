@@ -40,19 +40,24 @@ function initRescueMap() {
     zoomControl: false // Custom placed controls
   });
 
-  // Tile Layers
+  // 100% FREE Tile Layers (Zero API Key required, forever free & fast)
   tileLayers.dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; CartoDB &copy; OpenStreetMap',
     maxZoom: 19
   });
 
+  tileLayers.osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 19
+  });
+
   tileLayers.street = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap &copy; CartoDB',
+    attribution: '&copy; CartoDB &copy; OpenStreetMap',
     maxZoom: 19
   });
 
   tileLayers.satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS',
+    attribution: 'Tiles &copy; Esri &mdash; Public Satellite Tile Server (Free)',
     maxZoom: 18
   });
 
@@ -69,9 +74,7 @@ function initRescueMap() {
   setupMapControls();
 }
 
-let arcGisApiKey = localStorage.getItem('arcgis_api_key') || '';
-
-// Map UI Controls (Layer switchers, filters, reset)
+// Map UI Controls (100% Free Layer switchers, filters, city jumps, reset)
 function setupMapControls() {
   const mapContainer = document.getElementById('rescue-map');
   if (!mapContainer || document.getElementById('custom-map-hud')) return;
@@ -84,15 +87,15 @@ function setupMapControls() {
     <div class="hud-topbar">
       <div class="hud-layer-switchers">
         <button class="hud-btn active" id="btn-layer-dark" onclick="switchMapLayer('dark')"><i class="fa-solid fa-moon"></i> Dark</button>
-        <button class="hud-btn" id="btn-layer-street" onclick="switchMapLayer('street')"><i class="fa-solid fa-map"></i> Street</button>
+        <button class="hud-btn" id="btn-layer-osm" onclick="switchMapLayer('osm')"><i class="fa-solid fa-map-marked-alt"></i> OpenStreetMap</button>
+        <button class="hud-btn" id="btn-layer-street" onclick="switchMapLayer('street')"><i class="fa-solid fa-road"></i> Street</button>
         <button class="hud-btn" id="btn-layer-sat" onclick="switchMapLayer('satellite')"><i class="fa-solid fa-satellite"></i> Satellite</button>
-        <button class="hud-btn" id="btn-layer-arcgis" onclick="switchMapLayer('arcgis')"><i class="fa-solid fa-globe"></i> ArcGIS</button>
       </div>
       <div class="hud-actions d-flex gap-1">
-        <button class="hud-btn" onclick="openArcGisKeyModal()" title="Configure ArcGIS API Key"><i class="fa-solid fa-key"></i> Key</button>
-        <button class="hud-btn" onclick="switchMapCity('vizag')" title="Switch to Visakhapatnam [17.6868, 83.2185]"><i class="fa-solid fa-location-crosshairs"></i> Vizag</button>
+        <button class="hud-btn" onclick="locateUserGps()" title="Locate My GPS Position"><i class="fa-solid fa-crosshairs"></i> My GPS</button>
+        <button class="hud-btn" onclick="switchMapCity('vizag')" title="Switch to Visakhapatnam [17.6868, 83.2185]"><i class="fa-solid fa-location-dot text-danger"></i> Vizag</button>
         <button class="hud-btn" onclick="switchMapCity('chennai')" title="Switch to Chennai [13.0600, 80.2200]">Chennai</button>
-        <button class="hud-btn" onclick="resetMapCamera()" title="Reset Center View"><i class="fa-solid fa-crosshairs"></i></button>
+        <button class="hud-btn" onclick="resetMapCamera()" title="Reset Center View"><i class="fa-solid fa-rotate-left"></i></button>
       </div>
     </div>
 
@@ -123,9 +126,9 @@ function setupMapControls() {
   mapContainer.appendChild(hud);
 }
 
-// Switch between Dark, Street, Satellite, and ArcGIS Vector base layers
+// Switch between 100% Free Base Layers (No API key needed)
 window.switchMapLayer = function(layerKey) {
-  if (!mapInstance) return;
+  if (!mapInstance || !tileLayers[layerKey]) return;
 
   // Remove existing base layers
   Object.values(tileLayers).forEach(layer => {
@@ -134,30 +137,49 @@ window.switchMapLayer = function(layerKey) {
     }
   });
 
-  if (layerKey === 'arcgis') {
-    try {
-      if (arcGisApiKey && window.L && L.esri && L.esri.Vector && L.esri.Vector.vectorBasemapLayer) {
-        tileLayers.arcgis = L.esri.Vector.vectorBasemapLayer("ArcGIS:Streets", { apiKey: arcGisApiKey });
-      } else if (window.L && L.esri && L.esri.basemapLayer) {
-        tileLayers.arcgis = L.esri.basemapLayer('Streets');
-      } else {
-        tileLayers.arcgis = tileLayers.street;
-      }
-      tileLayers.arcgis.addTo(mapInstance);
-      if (typeof showToast === 'function') {
-        showToast(arcGisApiKey ? 'ArcGIS Vector Streets layer loaded with your API Key!' : 'Esri ArcGIS Streets basemap activated.', 'info');
-      }
-    } catch (e) {
-      console.warn('Esri Vector fallback to street tiles:', e);
-      tileLayers.street.addTo(mapInstance);
-    }
-  } else if (tileLayers[layerKey]) {
-    tileLayers[layerKey].addTo(mapInstance);
-  }
-
+  tileLayers[layerKey].addTo(mapInstance);
   activeTileKey = layerKey;
+
   document.querySelectorAll('.hud-layer-switchers .hud-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(`btn-layer-${layerKey === 'satellite' ? 'sat' : layerKey}`)?.classList.add('active');
+
+  const names = {
+    dark: 'CartoDB Dark Matter',
+    osm: 'OpenStreetMap Global',
+    street: 'CartoDB Voyager Clean Streets',
+    satellite: 'Free Satellite Imagery'
+  };
+  if (typeof showToast === 'function') {
+    showToast(`🗺️ Switched to ${names[layerKey] || layerKey} (Free Map)`, 'info');
+  }
+};
+
+// 1-Click Browser GPS Geolocation
+window.locateUserGps = function() {
+  if (!navigator.geolocation) {
+    if (typeof showToast === 'function') showToast('Geolocation is not supported by your browser.', 'error');
+    return;
+  }
+
+  showToast('🛰️ Fetching your live GPS location...', 'info');
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const { latitude, longitude } = pos.coords;
+      mapInstance.setView([latitude, longitude], 14);
+
+      const userIcon = createCustomIcon('donor', 'fa-solid fa-user-location');
+      L.marker([latitude, longitude], { icon: userIcon })
+        .bindPopup('<div class="map-popup-card"><h4>📍 Your Live Location</h4><p>Emergency rescue radius centered here.</p></div>')
+        .addTo(markersLayer)
+        .openPopup();
+
+      showToast(`📍 Found your location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`, 'success');
+    },
+    err => {
+      showToast('Could not access GPS. Please allow location permissions in browser.', 'warning');
+    },
+    { timeout: 8000 }
+  );
 };
 
 // Switch between cities (including Visakhapatnam [17.6868, 83.2185]!)
@@ -271,26 +293,6 @@ function renderVizagRescueNodes() {
   startAnimatedVehicle();
 }
 
-// Interactive prompt for user's ArcGIS API Key
-window.openArcGisKeyModal = function() {
-  const currentKey = arcGisApiKey || '';
-  const newKey = prompt('Enter your ArcGIS API Key (from developer.arcgis.com):', currentKey);
-  if (newKey !== null) {
-    arcGisApiKey = newKey.trim();
-    localStorage.setItem('arcgis_api_key', arcGisApiKey);
-    if (arcGisApiKey) {
-      if (typeof showToast === 'function') {
-        showToast('ArcGIS API Key saved! Switching to ArcGIS Vector layer...', 'success');
-      }
-      switchMapLayer('arcgis');
-    } else {
-      if (typeof showToast === 'function') {
-        showToast('API Key cleared. Using free standard basemap.', 'info');
-      }
-      switchMapLayer('dark');
-    }
-  }
-};
 
 window.resetMapCamera = function() {
   if (!mapInstance) return;
