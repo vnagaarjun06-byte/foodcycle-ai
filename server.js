@@ -20,6 +20,7 @@ app.use('/api/sos', require('./src/routes/sosRoutes'));
 app.use('/api/market', require('./src/routes/marketRoutes'));
 app.use('/api/recycle', require('./src/routes/recycleRoutes'));
 app.use('/api/receipts', require('./src/routes/receiptRoutes'));
+app.use('/api/gemini', require('./src/routes/geminiRoutes'));
 
 // Health check endpoint for Render monitoring
 app.get('/health', (req, res) => {

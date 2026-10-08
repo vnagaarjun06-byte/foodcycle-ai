@@ -63,13 +63,16 @@ window.switchTab = function(tabPaneId) {
   };
   highlightProcessStep(stepMap[tabPaneId] || 1);
 
-  // Invalidate Leaflet map size when switching to map tab
-  if (tabPaneId === 'tab-ngo') {
+  // Invalidate Leaflet map size and redraw Google Charts
+  if (tabPaneId === 'tab-ngo' || tabPaneId === 'tab-overview') {
     setTimeout(() => {
       if (typeof mapInstance !== 'undefined' && mapInstance) {
         mapInstance.invalidateSize();
       } else if (typeof initRescueMap === 'function') {
         initRescueMap();
+      }
+      if (tabPaneId === 'tab-overview' && typeof drawGoogleCharts === 'function') {
+        drawGoogleCharts();
       }
     }, 150);
   }
@@ -1055,3 +1058,214 @@ window.updateEnergyCalc = function(wasteKg) {
   document.getElementById('calc-compost-val').innerHTML = `${(val * 0.45).toFixed(1)} <small>kg</small>`;
   document.getElementById('calc-co2-val').innerHTML = `${(val * 2.50).toFixed(1)} <small>kg CO2e</small>`;
 };
+
+/* ====================================================
+   GOOGLE CHARTS API INTEGRATION
+   ==================================================== */
+let googleChartsLoaded = false;
+
+function initGoogleCharts() {
+  if (typeof google !== 'undefined' && google.charts) {
+    google.charts.load('current', { packages: ['corechart', 'gauge'] });
+    google.charts.setOnLoadCallback(() => {
+      googleChartsLoaded = true;
+      drawGoogleCharts();
+    });
+  }
+}
+
+window.drawGoogleCharts = function() {
+  if (!googleChartsLoaded || typeof google === 'undefined' || !google.visualization) return;
+
+  // 1. Google Donut Chart: Food Diversion Streams
+  const pieContainer = document.getElementById('gchart-pie');
+  if (pieContainer) {
+    const pieData = google.visualization.arrayToDataTable([
+      ['Stream', 'Quantity (kg)'],
+      ['Cooked Meals Rescued', 240],
+      ['Bakery 70% Clearance', 110],
+      ['Dairy Chilled Salvage', 75],
+      ['Biogas Clean Energy', 95]
+    ]);
+
+    const pieOptions = {
+      pieHole: 0.55,
+      backgroundColor: 'transparent',
+      legend: { position: 'bottom', textStyle: { color: '#94a3b8', fontSize: 11 } },
+      chartArea: { width: '90%', height: '75%' },
+      colors: ['#10b981', '#f59e0b', '#38bdf8', '#a855f7'],
+      pieSliceBorderColor: 'transparent',
+      pieSliceTextStyle: { color: '#ffffff', fontSize: 11, bold: true }
+    };
+
+    const pieChart = new google.visualization.PieChart(pieContainer);
+    pieChart.draw(pieData, pieOptions);
+  }
+
+  // 2. Google Column Chart: Weekly Methane & CO2e Abated
+  const colContainer = document.getElementById('gchart-column');
+  if (colContainer) {
+    const colData = google.visualization.arrayToDataTable([
+      ['Day', 'CO2e Diverted (kg)', 'Biogas (m³)'],
+      ['Mon', 140, 35],
+      ['Tue', 220, 55],
+      ['Wed', 190, 48],
+      ['Thu', 310, 78],
+      ['Fri', 420, 105],
+      ['Sat', 540, 135],
+      ['Sun', 610, 152]
+    ]);
+
+    const colOptions = {
+      backgroundColor: 'transparent',
+      legend: { position: 'top', textStyle: { color: '#94a3b8', fontSize: 11 } },
+      chartArea: { width: '85%', height: '70%' },
+      colors: ['#3b82f6', '#10b981'],
+      hAxis: { textStyle: { color: '#64748b', fontSize: 11 } },
+      vAxis: {
+        textStyle: { color: '#64748b', fontSize: 11 },
+        gridlines: { color: 'rgba(255,255,255,0.06)' },
+        baselineColor: 'rgba(255,255,255,0.1)'
+      }
+    };
+
+    const colChart = new google.visualization.ColumnChart(colContainer);
+    colChart.draw(colData, colOptions);
+  }
+
+  // 3. Google Speedometer Gauge: Network Rescue & Spoilage Prevention Index
+  const gaugeContainer = document.getElementById('gchart-gauge');
+  if (gaugeContainer) {
+    const gaugeData = google.visualization.arrayToDataTable([
+      ['Label', 'Value'],
+      ['Rescue %', 96]
+    ]);
+
+    const gaugeOptions = {
+      width: 170,
+      height: 170,
+      redFrom: 0, redTo: 60,
+      yellowFrom: 60, yellowTo: 85,
+      greenFrom: 85, greenTo: 100,
+      minorTicks: 5,
+      max: 100
+    };
+
+    const gaugeChart = new google.visualization.Gauge(gaugeContainer);
+    gaugeChart.draw(gaugeData, gaugeOptions);
+  }
+};
+
+window.addEventListener('resize', () => {
+  if (googleChartsLoaded) {
+    drawGoogleCharts();
+  }
+});
+
+// Initialize charts on load
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initGoogleCharts);
+} else {
+  initGoogleCharts();
+}
+
+/* ====================================================
+   GOOGLE GEMINI AI RESCUE COPILOT
+   ==================================================== */
+let geminiOpen = false;
+
+window.toggleGeminiCopilot = function() {
+  const drawer = document.getElementById('gemini-copilot-drawer');
+  if (!drawer) return;
+
+  geminiOpen = !geminiOpen;
+  drawer.style.display = geminiOpen ? 'flex' : 'none';
+
+  if (geminiOpen) {
+    playChime('rescue');
+    document.getElementById('gemini-input')?.focus();
+  }
+};
+
+window.askGeminiPrompt = function(promptText) {
+  const input = document.getElementById('gemini-input');
+  if (input) {
+    input.value = promptText;
+    sendGeminiMessage();
+  }
+};
+
+window.sendGeminiMessage = async function() {
+  const input = document.getElementById('gemini-input');
+  const feed = document.getElementById('gemini-chat-feed');
+  if (!input || !feed) return;
+
+  const userText = input.value.trim();
+  if (!userText) return;
+
+  input.value = '';
+
+  // Append user bubble
+  const userMsg = document.createElement('div');
+  userMsg.className = 'gemini-msg gemini-msg-user';
+  userMsg.innerHTML = `<div class="gemini-msg-bubble">${escapeHtml(userText)}</div>`;
+  feed.appendChild(userMsg);
+  feed.scrollTop = feed.scrollHeight;
+
+  // Append loading bubble
+  const typingMsg = document.createElement('div');
+  typingMsg.className = 'gemini-msg gemini-msg-ai';
+  typingMsg.innerHTML = `<div class="gemini-msg-bubble text-muted"><span class="gemini-sparkle">✦</span> Gemini is synthesizing food science & logistics...</div>`;
+  feed.appendChild(typingMsg);
+  feed.scrollTop = feed.scrollHeight;
+
+  try {
+    const res = await fetch('/api/gemini/assist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: userText,
+        context: {
+          activeBatchesCount: (appState.foodItems || []).length,
+          selectedBatch: typeof selectedBatchId !== 'undefined' ? selectedBatchId : 'food-001'
+        }
+      })
+    });
+
+    const data = await res.json();
+    typingMsg.remove();
+
+    const aiMsg = document.createElement('div');
+    aiMsg.className = 'gemini-msg gemini-msg-ai';
+
+    let formatted = (data.reply || 'No response')
+      .replace(/\n/g, '<br/>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/### (.*?)(<br\/>|$)/g, '<h4 style="color: #38bdf8; margin: 4px 0;">$1</h4>');
+
+    aiMsg.innerHTML = `<div class="gemini-msg-bubble">${formatted}</div>`;
+    feed.appendChild(aiMsg);
+    feed.scrollTop = feed.scrollHeight;
+
+    playChime('rescue');
+  } catch (err) {
+    typingMsg.remove();
+    const errorMsg = document.createElement('div');
+    errorMsg.className = 'gemini-msg gemini-msg-ai';
+    errorMsg.innerHTML = `<div class="gemini-msg-bubble text-danger">⚠️ Connection error: ${err.message}</div>`;
+    feed.appendChild(errorMsg);
+  }
+};
+
+/* ====================================================
+   PWA SERVICE WORKER REGISTRATION (GOOGLE APP STANDARDS)
+   ==================================================== */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+      console.log('✅ FoodCycle AI Service Worker registered (PWA enabled):', reg.scope);
+    }).catch(err => {
+      console.log('Service Worker registration skipped:', err.message);
+    });
+  });
+}

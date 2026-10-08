@@ -40,7 +40,7 @@ function initRescueMap() {
     zoomControl: false // Custom placed controls
   });
 
-  // 100% FREE Tile Layers (Zero API Key required, forever free & fast)
+  // High-Resolution & Google Maps Tile Layers
   tileLayers.dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; CartoDB &copy; OpenStreetMap',
     maxZoom: 19
@@ -56,8 +56,18 @@ function initRescueMap() {
     maxZoom: 19
   });
 
+  tileLayers.google_streets = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+    attribution: '&copy; Google Maps Platform',
+    maxZoom: 20
+  });
+
+  tileLayers.google_hybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+    attribution: '&copy; Google Maps Imagery',
+    maxZoom: 20
+  });
+
   tileLayers.satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Tiles &copy; Esri &mdash; Public Satellite Tile Server (Free)',
+    attribution: 'Tiles &copy; Esri &mdash; Satellite Tile Server',
     maxZoom: 18
   });
 
@@ -82,7 +92,7 @@ function initRescueMap() {
   });
 }
 
-// Map UI Controls (100% Free Layer switchers, filters, city jumps, reset)
+// Map UI Controls (Google Maps layer switchers, filters, city jumps, reset)
 function setupMapControls() {
   const mapContainer = document.getElementById('rescue-map');
   if (!mapContainer || document.getElementById('custom-map-hud')) return;
@@ -95,8 +105,9 @@ function setupMapControls() {
     <div class="hud-topbar">
       <div class="hud-layer-switchers">
         <button class="hud-btn active" id="btn-layer-dark" onclick="switchMapLayer('dark')"><i class="fa-solid fa-moon"></i> Dark</button>
-        <button class="hud-btn" id="btn-layer-osm" onclick="switchMapLayer('osm')"><i class="fa-solid fa-map-marked-alt"></i> OpenStreetMap</button>
-        <button class="hud-btn" id="btn-layer-street" onclick="switchMapLayer('street')"><i class="fa-solid fa-road"></i> Street</button>
+        <button class="hud-btn" id="btn-layer-osm" onclick="switchMapLayer('osm')"><i class="fa-solid fa-map-marked-alt"></i> OSM</button>
+        <button class="hud-btn" id="btn-layer-google_streets" onclick="switchMapLayer('google_streets')"><i class="fa-brands fa-google text-primary"></i> Google Streets</button>
+        <button class="hud-btn" id="btn-layer-google_hybrid" onclick="switchMapLayer('google_hybrid')"><i class="fa-solid fa-earth-americas text-warning"></i> Google Hybrid</button>
         <button class="hud-btn" id="btn-layer-sat" onclick="switchMapLayer('satellite')"><i class="fa-solid fa-satellite"></i> Satellite</button>
       </div>
       <div class="hud-actions d-flex gap-1">
@@ -155,10 +166,35 @@ window.switchMapLayer = function(layerKey) {
     dark: 'CartoDB Dark Matter',
     osm: 'OpenStreetMap Global',
     street: 'CartoDB Voyager Clean Streets',
-    satellite: 'Free Satellite Imagery'
+    google_streets: 'Google Maps Roadmap',
+    google_hybrid: 'Google Maps Hybrid Satellite',
+    satellite: 'High-Res Satellite Imagery'
   };
   if (typeof showToast === 'function') {
-    showToast(`🗺️ Switched to ${names[layerKey] || layerKey} (Free Map)`, 'info');
+    showToast(`🗺️ Switched to ${names[layerKey] || layerKey}`, 'info');
+  }
+};
+
+// Google Maps Platform 1-Click Driving Navigation
+window.openInGoogleMaps = function(lat1, lng1, lat2, lng2) {
+  let url;
+  if (lat2 !== undefined && lng2 !== undefined) {
+    url = `https://www.google.com/maps/dir/?api=1&origin=${lat1},${lng1}&destination=${lat2},${lng2}&travelmode=driving`;
+  } else {
+    url = `https://www.google.com/maps/search/?api=1&query=${lat1},${lng1}`;
+  }
+  window.open(url, '_blank');
+  if (typeof showToast === 'function') {
+    showToast('🚗 Opening Google Maps Driving Directions...', 'info');
+  }
+};
+
+// Google Maps 360° Street View Panorama
+window.openStreetView = function(lat, lng) {
+  const url = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+  window.open(url, '_blank');
+  if (typeof showToast === 'function') {
+    showToast('👁️ Opening Google Street View 360° Panorama...', 'info');
   }
 };
 
@@ -363,6 +399,14 @@ function renderMapLocations(foodList = [], orgList = [], filterType = 'all') {
             <span>Capacity: <strong>${org.capacity || 50} residents</strong></span>
             <span>Phone: <strong>${org.contact}</strong></span>
           </div>
+          <div class="d-flex gap-1 mt-2">
+            <button onclick="window.openInGoogleMaps(${org.lat}, ${org.lng})" class="btn btn-sm btn-outline flex-1" title="Open in Google Maps">
+              <i class="fa-brands fa-google text-primary"></i> G-Maps
+            </button>
+            <button onclick="window.openStreetView(${org.lat}, ${org.lng})" class="btn btn-sm btn-outline flex-1" title="View in Google Street View">
+              <i class="fa-solid fa-street-view text-warning"></i> 360° View
+            </button>
+          </div>
         </div>
       `;
 
@@ -384,6 +428,14 @@ function renderMapLocations(foodList = [], orgList = [], filterType = 'all') {
           <div class="popup-meta">
             <span>Daily Capacity: <strong>${plant.dailyCapacityKg} kg/day</strong></span>
             <span>Technology: <strong>Anaerobic Digestion</strong></span>
+          </div>
+          <div class="d-flex gap-1 mt-2">
+            <button onclick="window.openInGoogleMaps(${plant.lat}, ${plant.lng})" class="btn btn-sm btn-outline flex-1" title="Open in Google Maps">
+              <i class="fa-brands fa-google text-primary"></i> G-Maps
+            </button>
+            <button onclick="window.openStreetView(${plant.lat}, ${plant.lng})" class="btn btn-sm btn-outline flex-1" title="View in Google Street View">
+              <i class="fa-solid fa-street-view text-warning"></i> 360° View
+            </button>
           </div>
         </div>
       `;
@@ -420,9 +472,15 @@ function renderMapLocations(foodList = [], orgList = [], filterType = 'all') {
             <span>Quantity: <strong>${item.quantity} ${item.unit}</strong></span>
             <span>Safe Temp: <strong>${item.storageTemp}°C</strong></span>
           </div>
-          <div class="mt-2">
-            <button onclick="window.focusSosRoute('${item.id}')" class="btn btn-sm btn-danger w-100">
-              <i class="fa-solid fa-route"></i> Track Rescue Route
+          <div class="d-flex gap-1 mt-2">
+            <button onclick="window.focusSosRoute('${item.id}')" class="btn btn-sm btn-danger flex-1">
+              <i class="fa-solid fa-route"></i> Track Van
+            </button>
+            <button onclick="window.openInGoogleMaps(${coords[0]}, ${coords[1]})" class="btn btn-sm btn-outline flex-1" title="Open in Google Maps">
+              <i class="fa-brands fa-google text-primary"></i> G-Maps
+            </button>
+            <button onclick="window.openStreetView(${coords[0]}, ${coords[1]})" class="btn btn-sm btn-outline" title="Street View">
+              <i class="fa-solid fa-street-view text-warning"></i>
             </button>
           </div>
         </div>
