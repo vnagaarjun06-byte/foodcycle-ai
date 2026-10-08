@@ -926,36 +926,132 @@ function sleep(ms) {
 }
 
 // Helpers
-function calculateRemainingHours(expiryDate) {
-  const diffMs = new Date(expiryDate).getTime() - Date.now();
-  return Math.max(0, Math.round(diffMs / (3600 * 1000)));
-}
+// Demo Batches for Interactive Workflow Cockpit
+const DEMO_BATCHES = {
+  'food-001': {
+    id: 'food-001',
+    title: '50 Servings Royal Veg Biryani & Paneer Gravy',
+    donor: 'Grand Palace Marriage Hall • Vadapalani',
+    originalPrice: 4500,
+    currentPrice: 0,
+    stage: 'Stage 3: Urgent SOS window (<5h)',
+    stageTag: '0 Price SOS',
+    tempText: '32°C (High Spoilage Risk)',
+    shelterText: 'Karunai Illam Orphanage (2.4 km)',
+    coords: [13.0505, 80.2115]
+  },
+  'food-002': {
+    id: 'food-002',
+    title: 'Assorted Whole Wheat Bread & Butter Croissants (15 Packs)',
+    donor: 'FreshBake Artisan Patisserie • Anna Nagar',
+    originalPrice: 1800,
+    currentPrice: 900,
+    stage: 'Stage 2: Dynamic Discount 50% OFF',
+    stageTag: '50% OFF Deal',
+    tempText: '24°C (Safe Ambient Range)',
+    shelterText: 'Anbalayam Senior Care (3.1 km)',
+    coords: [13.0827, 80.2160]
+  },
+  'food-003': {
+    id: 'food-003',
+    title: 'Organic Milk Cartons & Greek Yogurt Cups (25 Units)',
+    donor: 'SuperDaily Mart • T. Nagar',
+    originalPrice: 1250,
+    currentPrice: 1000,
+    stage: 'Stage 2: Dynamic Discount 20% OFF',
+    stageTag: '20% OFF Deal',
+    tempText: '4°C (Cold Chain Intact)',
+    shelterText: 'Sneha Shelter (1.8 km)',
+    coords: [13.0405, 80.2337]
+  }
+};
 
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.toString()
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
+let selectedBatchId = 'food-001';
 
-function showToast(message, type = 'info') {
-  const container = document.getElementById('toast-container');
-  if (!container) return;
+window.selectDemoBatch = function(batchId) {
+  const b = DEMO_BATCHES[batchId];
+  if (!b) return;
 
-  const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
-  let icon = 'fa-info-circle';
-  if (type === 'success') icon = 'fa-check-circle';
-  if (type === 'error') icon = 'fa-triangle-exclamation';
-  if (type === 'warning') icon = 'fa-clock';
+  selectedBatchId = batchId;
 
-  toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${escapeHtml(message)}</span>`;
-  container.appendChild(toast);
+  // Update pills styling
+  document.querySelectorAll('.batch-selector-pills .btn').forEach(btn => btn.classList.remove('active-pill'));
+  if (batchId === 'food-001') document.getElementById('pill-batch-1')?.classList.add('active-pill');
+  if (batchId === 'food-002') document.getElementById('pill-batch-2')?.classList.add('active-pill');
+  if (batchId === 'food-003') document.getElementById('pill-batch-3')?.classList.add('active-pill');
 
-  setTimeout(() => {
-    toast.remove();
-  }, 4500);
-}
+  // Update batch card
+  const stagePill = document.getElementById('active-batch-stage-pill');
+  if (stagePill) stagePill.textContent = b.stage;
+
+  document.getElementById('batch-card-title').textContent = b.title;
+  document.getElementById('batch-card-donor').innerHTML = `<i class="fa-solid fa-store"></i> ${b.donor}`;
+  document.getElementById('batch-card-price').innerHTML = `₹${b.currentPrice} <small style="font-size: 11px; text-decoration: line-through; color: #64748b;">₹${b.originalPrice}</small>`;
+  document.getElementById('batch-card-tag').textContent = b.stageTag;
+  document.getElementById('batch-card-temp').textContent = b.tempText;
+  document.getElementById('batch-card-shelter').textContent = b.shelterText;
+
+  // Center map on this item's location
+  if (typeof mapInstance !== 'undefined' && mapInstance && b.coords) {
+    mapInstance.setView(b.coords, 13);
+  }
+
+  showToast(`Tracking: ${b.title}`, 'info');
+};
+
+window.stepCheckShelfLife = function() {
+  const b = DEMO_BATCHES[selectedBatchId];
+  playChime('rescue');
+  showToast(`🔍 AI Shelf Life Check: Ambient temp ${b.tempText}. Safety degradation window calculated!`, 'info');
+  document.getElementById('stage-card-1')?.classList.add('active');
+  setTimeout(() => document.getElementById('stage-card-1')?.classList.remove('active'), 2500);
+};
+
+window.stepDynamicPriceDrop = function() {
+  const b = DEMO_BATCHES[selectedBatchId];
+  playChime('rescue');
+  b.currentPrice = Math.round(b.originalPrice * 0.3); // 70% off
+  b.stage = 'Stage 2: 70% Price Reduction';
+  b.stageTag = '70% OFF';
+
+  document.getElementById('batch-card-price').innerHTML = `₹${b.currentPrice} <small style="font-size: 11px; text-decoration: line-through; color: #64748b;">₹${b.originalPrice}</small>`;
+  document.getElementById('batch-card-tag').textContent = '70% OFF';
+  document.getElementById('active-batch-stage-pill').textContent = 'Stage 2: 70% OFF';
+
+  showToast(`🏷️ Dynamic Offer Applied: Price dropped by 70% to ₹${b.currentPrice} to sell before waste!`, 'warning');
+};
+
+window.stepTriggerSosAndVan = function() {
+  const b = DEMO_BATCHES[selectedBatchId];
+  playChime('sos');
+  b.currentPrice = 0;
+  b.stage = 'Stage 3: SOS Alert Active (<5h)';
+  b.stageTag = '0 Price SOS';
+
+  document.getElementById('batch-card-price').innerHTML = `₹0 <small style="font-size: 11px; text-decoration: line-through; color: #64748b;">₹${b.originalPrice}</small>`;
+  document.getElementById('batch-card-tag').textContent = '0 Price SOS';
+  document.getElementById('active-batch-stage-pill').textContent = 'Stage 3: Emergency SOS';
+
+  showToast('🚨 Urgency Window Hit! SOS alert broadcasted to nearby orphanages!', 'error');
+
+  // Trigger map route & van animation
+  focusSosRoute(selectedBatchId);
+};
+
+window.stepRecycleAndReceipt = function() {
+  playChime('delivery');
+  showToast('📜 Delivery Confirmed! Automated 80G Tax Exemption Certificate Form 10BE generated.', 'success');
+  switchTab('tab-tax');
+  if (appState.receipts && appState.receipts.length > 0) {
+    selectReceipt(appState.receipts[0].receiptId);
+  }
+};
+
+window.updateEnergyCalc = function(wasteKg) {
+  const val = Number(wasteKg);
+  document.getElementById('calc-waste-label').textContent = `${val} kg`;
+  document.getElementById('calc-biogas-val').innerHTML = `${(val * 0.25).toFixed(1)} <small>m³</small>`;
+  document.getElementById('calc-power-val').innerHTML = `${(val * 0.50).toFixed(1)} <small>kWh</small>`;
+  document.getElementById('calc-compost-val').innerHTML = `${(val * 0.45).toFixed(1)} <small>kg</small>`;
+  document.getElementById('calc-co2-val').innerHTML = `${(val * 2.50).toFixed(1)} <small>kg CO2e</small>`;
+};

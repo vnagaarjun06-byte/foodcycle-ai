@@ -188,77 +188,113 @@
           </div>
           <div class="panel-body">
             
-            <!-- Pitch Flow Quick Action Buttons -->
-            <div class="workflow-controls-bar mb-3">
-              <button class="btn btn-demo-walkthrough w-100" id="btn-master-demo" onclick="runLiveRescueVisionWalkthrough()">
-                <i class="fa-solid fa-play"></i> ▶ Run Live Rescue Vision Demo (60s Pitch)
-              </button>
-              <div class="grid-2col mt-2" style="gap: 8px;">
-                <button class="btn btn-sm btn-warning" onclick="triggerSimulator(24)">
-                  <i class="fa-solid fa-forward"></i> Advance 24h (20%&rarr;70%)
-                </button>
-                <button class="btn btn-sm btn-danger" onclick="triggerSimulator(72)">
-                  <i class="fa-solid fa-triangle-exclamation"></i> Trigger SOS Window (<5h)
-                </button>
+            <!-- Live Active Batch Controller -->
+            <div class="active-batch-cockpit mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Select Active Batch To Track:</span>
+                <span class="badge badge-success" id="active-batch-stage-pill">Stage 2: SOS Triggered</span>
               </div>
+              <div class="batch-selector-pills d-flex gap-1 mb-3" style="flex-wrap: wrap;">
+                <button class="btn btn-sm btn-secondary active-pill" id="pill-batch-1" onclick="selectDemoBatch('food-001')">🍲 50 Veg Biryani (Hall)</button>
+                <button class="btn btn-sm btn-secondary" id="pill-batch-2" onclick="selectDemoBatch('food-002')">🥐 15 Bread Packs (Bakery)</button>
+                <button class="btn btn-sm btn-secondary" id="pill-batch-3" onclick="selectDemoBatch('food-003')">🥛 25 Milk Cartons (Mart)</button>
+              </div>
+
+              <!-- Selected Batch Status Card -->
+              <div class="selected-batch-card p-3 rounded border-card bg-dark-card mb-3">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <h4 id="batch-card-title" style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 2px;">50 Servings Royal Veg Biryani & Paneer Gravy</h4>
+                    <span id="batch-card-donor" class="text-muted" style="font-size: 11px;"><i class="fa-solid fa-store"></i> Grand Palace Marriage Hall &bull; Vadapalani</span>
+                  </div>
+                  <div class="text-right" style="text-align: right;">
+                    <div id="batch-card-price" style="font-size: 16px; font-weight: 800; color: #10b981;">₹0 <small style="font-size: 11px; text-decoration: line-through; color: #64748b;">₹4500</small></div>
+                    <span class="badge badge-sos" id="batch-card-tag">0 Price SOS</span>
+                  </div>
+                </div>
+
+                <div class="batch-detail-grid mt-2 pt-2" style="border-top: 1px dashed #334155; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
+                  <div>
+                    <span class="text-muted">Storage Temp:</span> <strong id="batch-card-temp" style="color: #f59e0b;">32°C (High Spoilage Risk)</strong>
+                  </div>
+                  <div>
+                    <span class="text-muted">Nearest Match:</span> <strong id="batch-card-shelter" style="color: #38bdf8;">Karunai Illam (2.4 km)</strong>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Master 1-Click Pitch Walkthrough -->
+              <button class="btn btn-demo-walkthrough w-100" id="btn-master-demo" onclick="runLiveRescueVisionWalkthrough()">
+                <i class="fa-solid fa-play"></i> ▶ Run 60-Second Live Pitch Demo
+              </button>
             </div>
 
-            <!-- 4-Step Interactive Visualizer Cards -->
-            <div class="interactive-stage-cards">
+            <!-- Interactive Stage Step Triggers -->
+            <div class="interactive-stage-cards mb-3">
               
               <!-- Stage 1 -->
-              <div class="stage-flow-card" id="stage-card-1" onclick="switchTab('tab-donor')">
+              <div class="stage-flow-card" id="stage-card-1" onclick="stepCheckShelfLife()">
                 <div class="d-flex justify-content-between align-items-center">
-                  <strong><span class="p-step-num">1</span> Donor Logs Surplus Food</strong>
-                  <span class="badge badge-info">AI Predicted Expiry</span>
+                  <strong><span class="p-step-num">1</span> Log Food & AI Shelf-Life Check</strong>
+                  <button class="btn btn-sm btn-outline" style="padding: 2px 8px; font-size: 10px;">Test AI</button>
                 </div>
-                <p class="text-muted mt-1" style="font-size: 12px; margin-bottom: 0;">
-                  Marriage halls, bakeries, & canteens log batches. AI evaluates temperature degradation.
+                <p class="text-muted mt-1" style="font-size: 11px; margin-bottom: 0;">
+                  Calculates temperature degradation (Arrhenius rule). Sets safety threshold.
                 </p>
               </div>
 
               <!-- Stage 2 -->
-              <div class="stage-flow-card" id="stage-card-2" onclick="switchTab('tab-market')">
+              <div class="stage-flow-card" id="stage-card-2" onclick="stepDynamicPriceDrop()">
                 <div class="d-flex justify-content-between align-items-center">
-                  <strong><span class="p-step-num">2</span> Dynamic Discount (9-Day Window)</strong>
-                  <span class="badge badge-discount">20% &rarr; 50% &rarr; 70%</span>
+                  <strong><span class="p-step-num">2</span> Dynamic Discount (20% &rarr; 50% &rarr; 70%)</strong>
+                  <span class="badge badge-discount" id="badge-stage-2">Save before waste</span>
                 </div>
-                <p class="text-muted mt-1" style="font-size: 12px; margin-bottom: 0;">
-                  Automated price cuts encourage consumer rescue before expiration. Sell it before waste!
+                <p class="text-muted mt-1" style="font-size: 11px; margin-bottom: 0;">
+                  Drops supermarket / bakery prices automatically as expiry approaches.
                 </p>
               </div>
 
               <!-- Stage 3 -->
-              <div class="stage-flow-card highlight-urgent" id="stage-card-3" onclick="simulateVehicleRun()">
+              <div class="stage-flow-card highlight-urgent" id="stage-card-3" onclick="stepTriggerSosAndVan()">
                 <div class="d-flex justify-content-between align-items-center">
-                  <strong><span class="p-step-num" style="background: #ef4444; color:#fff;">3</span> Smart SOS Urgency (&le;5h / 5d)</strong>
-                  <span class="badge badge-sos">Priority GPS Route</span>
+                  <strong><span class="p-step-num" style="background: #ef4444; color:#fff;">3</span> Smart SOS Trigger & Live Van GPS</strong>
+                  <button class="btn btn-sm btn-danger" style="padding: 2px 8px; font-size: 10px;"><i class="fa-solid fa-truck-fast"></i> Run Van</button>
                 </div>
-                <p class="text-muted mt-1" style="font-size: 12px; margin-bottom: 0;">
-                  Price drops to ₹0. Priority route to nearby orphanages. Click to animate rescue van on map!
+                <p class="text-muted mt-1" style="font-size: 11px; margin-bottom: 0;">
+                  Fires urgent alert (&le;5h/5d), draws route to orphanage, and animates the rescue van!
                 </p>
               </div>
 
               <!-- Stage 4 -->
-              <div class="stage-flow-card" id="stage-card-4" onclick="switchTab('tab-tax')">
+              <div class="stage-flow-card" id="stage-card-4" onclick="stepRecycleAndReceipt()">
                 <div class="d-flex justify-content-between align-items-center">
-                  <strong><span class="p-step-num">4</span> 80G Receipt & Biogas Recycling</strong>
-                  <span class="badge badge-success">Form 10BE + ESG</span>
+                  <strong><span class="p-step-num">4</span> Biogas Compost & 80G Tax Receipt</strong>
+                  <span class="badge badge-success">Form 10BE</span>
                 </div>
-                <p class="text-muted mt-1" style="font-size: 12px; margin-bottom: 0;">
-                  Donors receive statutory 80G tax deductions. Expired food is converted to clean biogas & compost.
+                <p class="text-muted mt-1" style="font-size: 11px; margin-bottom: 0;">
+                  Diverts expired food to Biogas digester & issues 80G tax exemption certificate.
                 </p>
               </div>
 
             </div>
 
+            <!-- Quick Simulation Actions -->
+            <div class="grid-2col mb-3" style="gap: 8px;">
+              <button class="btn btn-sm btn-secondary" onclick="triggerSimulator(24)">
+                <i class="fa-solid fa-forward"></i> +24 Hours Fast-Forward
+              </button>
+              <button class="btn btn-sm btn-outline" onclick="resetSimulation()">
+                <i class="fa-solid fa-rotate-left"></i> Reset Demo State
+              </button>
+            </div>
+
             <!-- Live Audit Stream Preview -->
-            <div class="mt-3">
+            <div>
               <div class="d-flex justify-content-between align-items-center mb-1">
-                <strong style="font-size: 11px; text-transform: uppercase; color: #94a3b8;"><i class="fa-solid fa-clock-rotate-left"></i> Live Engine Activity</strong>
+                <strong style="font-size: 11px; text-transform: uppercase; color: #94a3b8;"><i class="fa-solid fa-clock-rotate-left"></i> Real-Time Lifecycle Audit Log</strong>
                 <button class="btn btn-ghost btn-sm p-0" onclick="loadStatsAndLogs()"><i class="fa-solid fa-rotate-right"></i></button>
               </div>
-              <div class="log-stream" id="audit-log-stream" style="max-height: 120px;">
+              <div class="log-stream" id="audit-log-stream" style="max-height: 110px;">
                 <!-- Injected by JS -->
               </div>
             </div>
@@ -564,14 +600,46 @@
           </div>
 
           <div class="panel">
-            <div class="panel-header">
-              <h3><i class="fa-solid fa-gauge-high"></i> Clean Energy Conversion Formula</h3>
+            <div class="panel-header bg-workflow-header">
+              <h3><i class="fa-solid fa-calculator text-primary"></i> Interactive Clean Energy Conversion Calculator</h3>
             </div>
             <div class="panel-body">
-              <div class="formula-box">
-                <p><strong>Biogas Yield:</strong> 1 kg organic waste &approx; 0.25 m³ biogas (equivalent to ~0.5 kWh electricity)</p>
-                <p><strong>Bio-Compost:</strong> 1 kg organic waste &approx; 0.45 kg organic fertilizer</p>
-                <p><strong>Methane Diverted:</strong> 1 kg food waste diverted &approx; 2.5 kg CO2e greenhouse reduction</p>
+              <div class="form-group mb-3">
+                <label>Input Organic Food Waste Weight (kg):</label>
+                <div class="d-flex gap-2">
+                  <input type="range" id="calc-waste-slider" min="5" max="500" value="50" step="5" class="w-100" oninput="updateEnergyCalc(this.value)" />
+                  <span id="calc-waste-label" class="badge badge-warning" style="font-size: 13px; min-width: 60px; text-align: center;">50 kg</span>
+                </div>
+              </div>
+
+              <div class="metrics-grid" style="grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 0;">
+                <div class="metric-card metric-biogas p-2">
+                  <div class="metric-info">
+                    <span class="metric-label">Clean Biogas Yield</span>
+                    <h4 class="metric-val" id="calc-biogas-val" style="font-size: 20px;">12.5 <small>m³</small></h4>
+                  </div>
+                </div>
+
+                <div class="metric-card metric-meals p-2">
+                  <div class="metric-info">
+                    <span class="metric-label">Power Equivalent</span>
+                    <h4 class="metric-val" id="calc-power-val" style="font-size: 20px; color: #38bdf8;">25.0 <small>kWh</small></h4>
+                  </div>
+                </div>
+
+                <div class="metric-card metric-co2 p-2">
+                  <div class="metric-info">
+                    <span class="metric-label">Bio-Compost Output</span>
+                    <h4 class="metric-val" id="calc-compost-val" style="font-size: 20px;">22.5 <small>kg</small></h4>
+                  </div>
+                </div>
+
+                <div class="metric-card metric-receipts p-2">
+                  <div class="metric-info">
+                    <span class="metric-label">Methane Diverted</span>
+                    <h4 class="metric-val" id="calc-co2-val" style="font-size: 20px; color: #a855f7;">125.0 <small>kg CO2e</small></h4>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
