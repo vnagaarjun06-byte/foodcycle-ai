@@ -1775,3 +1775,42 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(16, 185, 129, 0.15);
 }
+
+/* Master Interactive Workflow Stepper Styling */
+.master-workflow-container {
+  border-color: rgba(59, 130, 246, 0.3) !important;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.92)) !important;
+}
+
+.process-steps-track .p-step {
+  transition: all 0.25s ease;
+  user-select: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.process-steps-track .p-step:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.process-steps-track .p-step.active-step {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.3);
+}
+
+.process-steps-track .p-step.active-step .p-step-num {
+  background: #10b981;
+  color: #fff;
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+}
+
+.process-steps-track .p-step.completed-step {
+  opacity: 0.85;
+}
+
+.process-steps-track .p-step.completed-step .p-step-num {
+  background: #059669;
+  color: #fff;
+}

@@ -154,40 +154,83 @@
       </div>
     </div>
 
-    <!-- Real-Time Vision & Working Process Pipeline -->
-    <div class="process-vision-bar">
-      <div class="process-steps-track">
-        <div class="p-step" onclick="switchTab('tab-donor')">
+    <!-- REAL-TIME MASTER WORKFLOW CONTROLLER & STEPPER -->
+    <div class="master-workflow-container mb-3" style="background: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.4);">
+      
+      <!-- Top Title and 1-Click Scenario Walkthrough Buttons -->
+      <div class="d-flex justify-content-between align-items-center mb-3" style="flex-wrap: wrap; gap: 10px;">
+        <div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 12px;">
+              <i class="fa-solid fa-bolt"></i> LIVE WORKFLOW
+            </span>
+            <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #fff;">
+              End-to-End Zero-Waste Food Rescue Workflow
+            </h3>
+          </div>
+          <p style="margin: 4px 0 0 0; font-size: 12px; color: #94a3b8;">
+            Select a live demo scenario or test each step of the closed-loop food rescue lifecycle:
+          </p>
+        </div>
+
+        <div class="d-flex align-items-center gap-2" style="flex-wrap: wrap;">
+          <button class="btn btn-sm btn-warning" onclick="triggerWorkflowScenario('sos')" title="Wedding Surplus to Orphanage SOS" style="font-weight: 700;">
+            <i class="fa-solid fa-truck-fast"></i> Scenario A: Wedding SOS (Biryani)
+          </button>
+          <button class="btn btn-sm btn-secondary" onclick="triggerWorkflowScenario('market')" title="Bakery Dynamic Discount Clearance">
+            <i class="fa-solid fa-tags"></i> Scenario B: Bakery 70% Markdown
+          </button>
+          <button class="btn btn-sm btn-secondary" onclick="triggerWorkflowScenario('biogas')" title="Spoiled Food to Biogas Plant">
+            <i class="fa-solid fa-seedling"></i> Scenario C: Biomethanation Hub
+          </button>
+          <button class="btn btn-sm btn-primary" id="btn-master-walkthrough" onclick="runLiveRescueVisionWalkthrough()" style="background: linear-gradient(135deg, #10b981, #059669); font-weight: 800; border: none; box-shadow: 0 2px 12px rgba(16, 185, 129, 0.4);">
+            <i class="fa-solid fa-play"></i> ▶ Run 30s Master Pitch Demo
+          </button>
+        </div>
+      </div>
+
+      <!-- 5-Step Visual Interactive Pipeline Stepper -->
+      <div class="process-steps-track" style="margin: 0; padding: 12px 14px; background: #090d16; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between; overflow-x: auto;">
+        <div class="p-step active-step" id="wf-step-1" onclick="switchTab('tab-donor'); highlightProcessStep(1);" style="cursor: pointer;" title="Step 1: Donor logs surplus batch">
           <span class="p-step-num">1</span>
-          <span><i class="fa-solid fa-box-open"></i> 1. Log Surplus</span>
+          <span><i class="fa-solid fa-box-open"></i> 1. Surplus Intake</span>
         </div>
         <span class="p-divider"><i class="fa-solid fa-chevron-right"></i></span>
-        <div class="p-step" onclick="switchTab('tab-market')">
+        
+        <div class="p-step" id="wf-step-2" onclick="switchTab('tab-donor'); document.getElementById('btn-predict-ai').click(); highlightProcessStep(2);" style="cursor: pointer;" title="Step 2: AI predicts temperature degradation rate">
           <span class="p-step-num">2</span>
-          <span><i class="fa-solid fa-tags"></i> 2. Dynamic 20% &rarr; 70%</span>
+          <span><i class="fa-solid fa-brain"></i> 2. Arrhenius AI</span>
         </div>
         <span class="p-divider"><i class="fa-solid fa-chevron-right"></i></span>
-        <div class="p-step active-sos" onclick="switchTab('tab-ngo')">
+
+        <div class="p-step" id="wf-step-3" onclick="switchTab('tab-market'); highlightProcessStep(3);" style="cursor: pointer;" title="Step 3: Dynamic 20% to 70% markdown">
           <span class="p-step-num">3</span>
-          <span><i class="fa-solid fa-truck-fast"></i> 3. SOS Route & Dispatch</span>
+          <span><i class="fa-solid fa-tags"></i> 3. Dynamic Clearance</span>
         </div>
         <span class="p-divider"><i class="fa-solid fa-chevron-right"></i></span>
-        <div class="p-step" onclick="switchTab('tab-recycle')">
+
+        <div class="p-step" id="wf-step-4" onclick="switchTab('tab-ngo'); highlightProcessStep(4);" style="cursor: pointer;" title="Step 4: Real-time routing & delivery vehicle">
           <span class="p-step-num">4</span>
-          <span><i class="fa-solid fa-seedling"></i> 4. Biogas Ledger</span>
+          <span><i class="fa-solid fa-truck-fast"></i> 4. SOS Dispatch</span>
         </div>
         <span class="p-divider"><i class="fa-solid fa-chevron-right"></i></span>
-        <div class="p-step" onclick="switchTab('tab-tax')">
+
+        <div class="p-step" id="wf-step-5" onclick="switchTab('tab-tax'); highlightProcessStep(5);" style="cursor: pointer;" title="Step 5: Form 10BE legal tax certificate">
           <span class="p-step-num">5</span>
           <span><i class="fa-solid fa-receipt"></i> 5. 80G Certificate</span>
         </div>
       </div>
-      <div>
-        <div class="live-network-pill" style="display: flex; align-items: center; gap: 8px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); padding: 8px 16px; border-radius: 20px; font-size: 12px; color: #10b981; font-weight: 700;">
-          <span class="pulse-dot"></span>
-          <span>Automated 24/7 Rescue Dispatch Active</span>
+
+      <!-- Active Stage Live Guidance Bar -->
+      <div id="workflow-guidance-bar" style="margin-top: 10px; padding: 10px 14px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; flex-wrap: wrap; gap: 8px;">
+        <div id="workflow-guidance-text" style="color: #cbd5e1;">
+          <strong style="color: #38bdf8;"><i class="fa-solid fa-compass"></i> Live Workflow Status:</strong> <span id="wf-guidance-msg">Platform ready. Click <strong>Scenario A</strong> or <strong>Run 30s Master Pitch Demo</strong> to see the full automated food rescue workflow!</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge badge-success" id="workflow-status-badge"><i class="fa-solid fa-circle-check"></i> System Operational</span>
         </div>
       </div>
+
     </div>
 
     <!-- TAB 1: OVERVIEW & ESG IMPACT -->
@@ -471,6 +514,27 @@
             <h3>Log Surplus / Expiring Food</h3>
           </div>
           <div class="panel-body">
+            <!-- 1-Click Instant Demo Presets -->
+            <div class="mb-3 p-3 rounded" style="background: rgba(16, 185, 129, 0.08); border: 1px dashed rgba(16, 185, 129, 0.35);">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span style="font-size: 11px; font-weight: 800; color: #10b981; text-transform: uppercase; letter-spacing: 0.5px;">
+                  <i class="fa-solid fa-bolt"></i> Instant 1-Click Test Presets:
+                </span>
+                <span class="badge badge-success" style="font-size: 10px;">Fills All 12 Fields & Runs Arrhenius AI</span>
+              </div>
+              <div class="d-flex gap-2" style="flex-wrap: wrap;">
+                <button type="button" class="btn btn-sm btn-outline" onclick="fillDonorPreset('biryani')" style="font-size: 11px; padding: 5px 12px; background: rgba(15, 23, 42, 0.8);">
+                  🍲 Wedding Biryani (100 kg @ 32°C)
+                </button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="fillDonorPreset('bakery')" style="font-size: 11px; padding: 5px 12px; background: rgba(15, 23, 42, 0.8);">
+                  🥐 Bakery Bread (25 kg @ 24°C)
+                </button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="fillDonorPreset('dairy')" style="font-size: 11px; padding: 5px 12px; background: rgba(15, 23, 42, 0.8);">
+                  🥛 Fresh Dairy Milk (40 L @ 36°C)
+                </button>
+              </div>
+            </div>
+
             <form id="donor-food-form">
               <div class="form-group">
                 <label>Food Item Title & Description *</label>

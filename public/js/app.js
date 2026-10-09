@@ -78,12 +78,35 @@ window.switchTab = function(tabPaneId) {
   }
 };
 
+function setWorkflowGuidance(message, badgeText = 'System Operational', badgeClass = 'badge-success') {
+  const msgEl = document.getElementById('wf-guidance-msg');
+  const badgeEl = document.getElementById('workflow-status-badge');
+  if (msgEl) msgEl.innerHTML = message;
+  if (badgeEl) {
+    badgeEl.className = `badge ${badgeClass}`;
+    badgeEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${escapeHtml(badgeText)}`;
+  }
+}
+
 function highlightProcessStep(stepNum) {
+  // Update both the old and new stepper elements
+  for (let i = 1; i <= 5; i++) {
+    const stepEl = document.getElementById(`wf-step-${i}`);
+    if (stepEl) {
+      stepEl.classList.remove('active-step', 'completed-step');
+      if (i === stepNum) {
+        stepEl.classList.add('active-step');
+      } else if (i < stepNum) {
+        stepEl.classList.add('completed-step');
+      }
+    }
+  }
+
   document.querySelectorAll('.process-steps-track .p-step').forEach((el, idx) => {
     if (idx + 1 === stepNum) {
-      el.classList.add('active');
+      el.classList.add('active-step');
     } else {
-      el.classList.remove('active');
+      el.classList.remove('active-step');
     }
   });
 }
@@ -885,43 +908,218 @@ window.dispatchRescueVehicle = function() {
   }
 };
 
+// 1-Click Donor Form Profile Preset Loader
+window.fillDonorPreset = async function(type) {
+  const now = new Date();
+  const prepTime = new Date(now.getTime() - 2 * 3600 * 1000).toISOString().slice(0, 16);
+
+  if (type === 'biryani') {
+    document.getElementById('food-title').value = '100 kg Royal Hyderabadi Dum Biryani & Gravy';
+    document.getElementById('food-donor-name').value = 'Grand Palace Marriage & Convention Hall';
+    document.getElementById('food-donor-type').value = 'marriage_hall';
+    document.getElementById('food-category').value = 'fresh_cooked';
+    document.getElementById('food-type').value = 'non_veg';
+    document.getElementById('food-quantity').value = 100;
+    document.getElementById('food-unit').value = 'kg';
+    document.getElementById('food-value').value = 18000;
+    document.getElementById('food-temp').value = 32;
+    document.getElementById('food-address').value = 'Grand Palace Banquet, Siripuram, Visakhapatnam';
+    document.getElementById('food-gst').value = '37AABCG9988D1Z4';
+    document.getElementById('food-prepared-at').value = prepTime;
+  } else if (type === 'bakery') {
+    document.getElementById('food-title').value = '25 kg Fresh Artisan Whole Wheat Loaves & Croissants';
+    document.getElementById('food-donor-name').value = 'French Crust Patisserie';
+    document.getElementById('food-donor-type').value = 'bakery';
+    document.getElementById('food-category').value = 'bakery';
+    document.getElementById('food-type').value = 'veg';
+    document.getElementById('food-quantity').value = 25;
+    document.getElementById('food-unit').value = 'kg';
+    document.getElementById('food-value').value = 4500;
+    document.getElementById('food-temp').value = 24;
+    document.getElementById('food-address').value = 'French Crust, MVP Colony, Visakhapatnam';
+    document.getElementById('food-gst').value = '37AAACB1122K1Z9';
+    document.getElementById('food-prepared-at').value = prepTime;
+  } else if (type === 'dairy') {
+    document.getElementById('food-title').value = '40 Litres Organic Pasteurized Milk & Cottage Cheese';
+    document.getElementById('food-donor-name').value = 'Sri Krishna Dairy & Chilling Center';
+    document.getElementById('food-donor-type').value = 'supermarket';
+    document.getElementById('food-category').value = 'packaged';
+    document.getElementById('food-type').value = 'dairy';
+    document.getElementById('food-quantity').value = 40;
+    document.getElementById('food-unit').value = 'units';
+    document.getElementById('food-value').value = 3200;
+    document.getElementById('food-temp').value = 36;
+    document.getElementById('food-address').value = 'Gajuwaka Main Road, Visakhapatnam';
+    document.getElementById('food-gst').value = '37BBCDE4455P1Z2';
+    document.getElementById('food-prepared-at').value = prepTime;
+  }
+
+  showToast(`⚡ Preset loaded for ${type.toUpperCase()}. Running Arrhenius AI prediction...`, 'info');
+  await handleAiPredict();
+  highlightProcessStep(2);
+  setWorkflowGuidance(
+    `Preset loaded! Arrhenius AI calculated microbial shelf-life. Click "Submit & Log Food Listing" to publish into the lifecycle!`,
+    'Step 2: AI Analyzed',
+    'badge-warning'
+  );
+};
+
+// 1-Click Interactive Workflow Scenario Triggers
+window.triggerWorkflowScenario = async function(scenario) {
+  if (scenario === 'sos') {
+    showToast('🚀 Running Scenario A: Wedding Hall Surplus to Emergency Shelter...', 'info');
+    switchTab('tab-donor');
+    highlightProcessStep(1);
+    setWorkflowGuidance(
+      'Step 1: Logging 100 kg wedding surplus biryani from Grand Palace Banquet...',
+      'Step 1: Logging',
+      'badge-info'
+    );
+    await fillDonorPreset('biryani');
+    await sleep(1500);
+
+    // Auto submit to backend
+    const submitBtn = document.getElementById('btn-submit-food');
+    if (submitBtn) {
+      document.getElementById('donor-food-form').dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    }
+    await sleep(1800);
+
+    // Switch to Overview Map
+    switchTab('tab-overview');
+    highlightProcessStep(4);
+    playChime('sos');
+    setWorkflowGuidance(
+      '🚨 Critical spoilage threshold hit (<5h remaining)! Emergency SOS alert auto-matched to Karunai Illam Orphanage (2.4 km). Live vehicle en route!',
+      'Step 4: SOS Dispatched',
+      'badge-sos'
+    );
+    showToast('🚨 SOS Window Hit (<5h)! Auto-matched to Karunai Illam Orphanage (2.4 km)!', 'error');
+
+    // Run GPS vehicle on map
+    if (appState.allFood && appState.allFood.length > 0) {
+      focusSosRoute(appState.allFood[0].id);
+    } else {
+      focusSosRoute('food-001');
+    }
+    await sleep(4000);
+
+    // Switch to Tax tab & show Form 10BE
+    switchTab('tab-tax');
+    highlightProcessStep(5);
+    playChime('delivery');
+    setWorkflowGuidance(
+      '🎉 Rescued & Delivered! 100 kg food served. Automated Income Tax Form 10BE / Section 80G Certificate issued to Grand Palace Banquet!',
+      'Step 5: 80G Generated',
+      'badge-success'
+    );
+    showToast('📜 Delivery Confirmed! Automated 80G Tax Exemption Certificate Form 10BE generated.', 'success');
+    if (appState.receipts && appState.receipts.length > 0) {
+      selectReceipt(appState.receipts[0].receiptId);
+    }
+  } else if (scenario === 'market') {
+    showToast('🚀 Running Scenario B: Bakery Surplus Dynamic Clearance...', 'info');
+    switchTab('tab-donor');
+    highlightProcessStep(1);
+    await fillDonorPreset('bakery');
+    await sleep(1500);
+
+    switchTab('tab-market');
+    highlightProcessStep(3);
+    playChime('rescue');
+    setWorkflowGuidance(
+      '🏷️ Safe window active. Dynamic discount automatically markdown by 70% to sell before waste!',
+      'Step 3: Dynamic 70% OFF',
+      'badge-warning'
+    );
+    showToast('🏷️ Dynamic Clearance Active: Whole Wheat Croissants discounted by 70% to prevent waste!', 'warning');
+  } else if (scenario === 'biogas') {
+    showToast('🚀 Running Scenario C: Spoiled Food Biomethanation...', 'info');
+    switchTab('tab-donor');
+    highlightProcessStep(1);
+    await fillDonorPreset('dairy');
+    await sleep(1500);
+
+    switchTab('tab-recycle');
+    highlightProcessStep(4);
+    playChime('rescue');
+    setWorkflowGuidance(
+      '🌱 Arrhenius AI detected thermal abuse (>35°C). Food is unsafe for humans. Diverted to Anaerobic Digester for clean Biogas energy!',
+      'Biogas Diverted',
+      'badge-success'
+    );
+    showToast('🌱 Spoilage Threshold Exceeded! Batch routed to GreenEarth Biogas Hub to generate clean methane energy.', 'success');
+  }
+};
+
 // End-to-End Real-Time Rescue Vision Walkthrough Demo
 window.runLiveRescueVisionWalkthrough = async function() {
-  showToast('🚀 Launching Real-Time Closed-Loop Rescue Vision Demo!', 'info');
+  showToast('🚀 Launching Master End-to-End Food Rescue Pitch Demo!', 'info');
   
   // Step 1: Donor Stage
   switchTab('tab-donor');
   highlightProcessStep(1);
-  showToast('📦 Stage 1: Donor logs surplus biryani & sets temperature...', 'info');
-  await sleep(2500);
+  setWorkflowGuidance(
+    'Step 1 of 5: Donor logs 100 kg wedding surplus biryani at ambient heat (32°C)...',
+    'Step 1: Intake',
+    'badge-info'
+  );
+  showToast('📦 Step 1: Donor logs surplus biryani & ambient temperature...', 'info');
+  await fillDonorPreset('biryani');
+  await sleep(2200);
 
-  // Step 2: Dynamic Market Stage
-  switchTab('tab-market');
+  // Step 2: Arrhenius AI Prediction
   highlightProcessStep(2);
   playChime('rescue');
-  showToast('🏷️ Stage 2: 9-Day Window &bull; Dynamic discount progressively drops 20% &rarr; 50% &rarr; 70%!', 'warning');
-  await sleep(2800);
+  setWorkflowGuidance(
+    'Step 2 of 5: Arrhenius Microbial Kinetics calculates remaining safe shelf-life: 4.8 hours (High Spoilage Risk)...',
+    'Step 2: AI Spoilage',
+    'badge-warning'
+  );
+  showToast('🧪 Step 2: Arrhenius AI calculates spoilage rate k = A * exp(-Ea/RT)...', 'warning');
+  await sleep(2200);
 
-  // Step 3: Urgent SOS Stage & GPS Map
-  switchTab('tab-overview');
+  // Step 3: Dynamic Market Stage
+  switchTab('tab-market');
   highlightProcessStep(3);
+  playChime('rescue');
+  setWorkflowGuidance(
+    'Step 3 of 5: Perishable inventory enters Dynamic Clearance Store with automated 20% → 50% → 70% price markdowns...',
+    'Step 3: Clearance',
+    'badge-warning'
+  );
+  showToast('🏷️ Step 3: Dynamic discount progressively drops 20% → 50% → 70%!', 'warning');
+  await sleep(2400);
+
+  // Step 4: Urgent SOS Stage & GPS Map
+  switchTab('tab-overview');
+  highlightProcessStep(4);
   playChime('sos');
-  showToast('🚨 Stage 3: Urgency window (<5h) hit! Smart SOS triggers priority routing to Orphanage!', 'error');
-  await sleep(1000);
+  setWorkflowGuidance(
+    'Step 4 of 5: Urgency window (<5h) hit! Smart SOS triggers priority routing to Karunai Illam Orphanage. GPS delivery van moving!',
+    'Step 4: Live GPS Van',
+    'badge-sos'
+  );
+  showToast('🚨 Step 4: Urgency window (<5h) hit! Smart SOS triggers priority routing to Orphanage!', 'error');
+  await sleep(800);
 
   if (appState.sosAlerts && appState.sosAlerts.length > 0) {
-    const alert = appState.sosAlerts[0];
-    focusSosRoute(alert.id);
-    await sleep(800);
-    showToast('🚐 Live Rescue Van dispatched! Watch real-time GPS telemetry on Leaflet Map...', 'info');
+    focusSosRoute(appState.sosAlerts[0].id);
+  } else {
+    focusSosRoute('food-001');
   }
   await sleep(4000);
 
-  // Step 4: Tax Exemption Certificate & ESG
+  // Step 5: Tax Exemption Certificate & ESG
   switchTab('tab-tax');
   highlightProcessStep(5);
   playChime('delivery');
-  showToast('📜 Final Stage: Food delivered! Automated Section 80G Tax Exemption Certificate generated!', 'success');
+  setWorkflowGuidance(
+    '🎉 Step 5 of 5: 100 kg food served! Section 80G / Form 10BE Government Tax Exemption Certificate generated for donor!',
+    'Step 5: Form 10BE',
+    'badge-success'
+  );
+  showToast('📜 Step 5: Food delivered! Automated Section 80G Tax Exemption Certificate generated!', 'success');
   
   if (appState.receipts && appState.receipts.length > 0) {
     selectReceipt(appState.receipts[0].receiptId);
