@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const store = require('../data/store');
+const dbService = require('../data/dbService');
 const { runLifecycleScan } = require('../engine/lifecycleEngine');
 
 // List all 80G tax receipts
-router.get('/', (req, res) => {
-  const receipts = store.getAllReceipts();
+router.get('/', async (req, res) => {
+  const receipts = await dbService.getAllReceipts();
   res.json({ success: true, count: receipts.length, data: receipts });
 });
 

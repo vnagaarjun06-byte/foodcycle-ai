@@ -1506,3 +1506,103 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
+
+/* ====================================================
+   SUPABASE POSTGRESQL DATABASE MODAL & CONTROLS
+   ==================================================== */
+window.openSupabaseModal = async function() {
+  const modal = document.getElementById('supabase-modal');
+  if (modal) {
+    modal.style.display = 'flex';
+    await checkSupabaseStatus();
+  }
+};
+
+window.closeSupabaseModal = function() {
+  const modal = document.getElementById('supabase-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+window.checkSupabaseStatus = async function() {
+  try {
+    const res = await fetch('/api/db/status');
+    const json = await res.json();
+    if (!json.success) return;
+
+    const { provider, connected, configured, details } = json.data;
+    
+    // Update Header Badge
+    const badgeText = document.getElementById('supabase-badge-text');
+    const badgeBtn = document.getElementById('btn-supabase-status');
+    if (badgeText) {
+      badgeText.textContent = connected ? 'Supabase Connected' : 'Supabase Ready';
+    }
+    if (badgeBtn) {
+      if (connected) {
+        badgeBtn.style.color = '#10b981';
+        badgeBtn.style.borderColor = 'rgba(16, 185, 129, 0.6)';
+        badgeBtn.style.background = 'rgba(16, 185, 129, 0.12)';
+      } else {
+        badgeBtn.style.color = '#3ecf8e';
+        badgeBtn.style.borderColor = 'rgba(62, 207, 142, 0.4)';
+      }
+    }
+
+    // Update Modal Fields
+    const modalBadge = document.getElementById('supabase-modal-badge');
+    const modalEndpoint = document.getElementById('supabase-modal-endpoint');
+    const modalDetails = document.getElementById('supabase-modal-details');
+
+    if (modalBadge) {
+      modalBadge.textContent = connected ? 'Live Cloud Connected' : 'Supabase Adapter Ready';
+      modalBadge.style.background = connected ? '#10b981' : '#f59e0b';
+    }
+    if (modalEndpoint) {
+      modalEndpoint.textContent = details.url || provider;
+    }
+    if (modalDetails) {
+      modalDetails.innerHTML = details.message || 'PostgreSQL schema verified and ready for cloud sync.';
+    }
+
+  } catch (err) {
+    console.error('Failed to fetch DB status:', err);
+  }
+};
+
+window.testSupabaseConnection = async function() {
+  showToast('Testing Supabase PostgreSQL ping...', 'info');
+  try {
+    const res = await fetch('/api/db/test', { method: 'POST' });
+    const json = await res.json();
+    const data = json.data;
+    if (data.connected) {
+      playChime('delivery');
+      showToast('✅ Supabase PostgreSQL connection verified successfully!', 'success');
+    } else {
+      showToast(data.message || 'Supabase credentials not yet provided in .env', 'warning');
+    }
+    await checkSupabaseStatus();
+  } catch (err) {
+    showToast('Failed to ping Supabase: ' + err.message, 'error');
+  }
+};
+
+window.syncSupabaseData = async function() {
+  showToast('Initiating cloud sync to Supabase PostgreSQL...', 'info');
+  try {
+    const res = await fetch('/api/db/sync', { method: 'POST' });
+    const json = await res.json();
+    if (json.success) {
+      playChime('delivery');
+      showToast('🎉 Local food batches and organizations synced to Supabase!', 'success');
+    } else {
+      showToast(json.message || json.error || 'Configure SUPABASE_URL in .env to sync', 'warning');
+    }
+  } catch (err) {
+    showToast('Sync failed: ' + err.message, 'error');
+  }
+};
+
+// Auto check DB status on load
+setTimeout(checkSupabaseStatus, 1000);
+

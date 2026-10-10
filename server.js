@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -21,6 +22,7 @@ app.use('/api/market', require('./src/routes/marketRoutes'));
 app.use('/api/recycle', require('./src/routes/recycleRoutes'));
 app.use('/api/receipts', require('./src/routes/receiptRoutes'));
 app.use('/api/gemini', require('./src/routes/geminiRoutes'));
+app.use('/api/db', require('./src/routes/dbRoutes'));
 
 // Health check endpoint for Render monitoring
 app.get('/health', (req, res) => {

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const store = require('../data/store');
+const dbService = require('../data/dbService');
 const { calculateDistanceKm } = require('../engine/lifecycleEngine');
 
 // List active SOS donation alerts
@@ -33,7 +34,7 @@ router.get('/alerts', (req, res) => {
 });
 
 // NGO claims/accepts donation
-router.post('/claim', (req, res) => {
+router.post('/claim', async (req, res) => {
   const { foodId, recipientId, notes } = req.body;
   if (!foodId) {
     return res.status(400).json({ success: false, error: 'foodId is required' });
@@ -48,7 +49,7 @@ router.post('/claim', (req, res) => {
   const recipientName = recipient ? recipient.name : (food.matchedRecipientName || 'Karunai Illam Orphanage');
 
   // Update food status
-  const updated = store.updateFood(foodId, {
+  const updated = await dbService.updateFood(foodId, {
     status: 'claimed_donation',
     claimedAt: new Date().toISOString(),
     matchedRecipientName: recipientName,
@@ -56,7 +57,7 @@ router.post('/claim', (req, res) => {
   });
 
   // Automatically generate 80G Tax-Benefit Receipt
-  const receipt = store.generateReceipt(food, recipientName);
+  const receipt = await dbService.generateReceipt(food, recipientName);
 
   store.logAction('SOS_CLAIMED', `${recipientName} claimed ${food.quantity} ${food.unit} of '${food.title}'. 80G Receipt #${receipt.receiptId} generated.`);
 

@@ -1,13 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const store = require('../data/store');
+const dbService = require('../data/dbService');
 const { predictExpiry, evaluateStage } = require('../engine/expiryPredictor');
 const { evaluateLifecycleState } = require('../engine/lifecycleEngine');
 
 // List all food items
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   const { status, category } = req.query;
-  let items = store.getAllFood();
+  let items = await dbService.getAllFood();
 
   if (status) {
     items = items.filter(i => i.status === status);
@@ -20,8 +21,8 @@ router.get('/', (req, res) => {
 });
 
 // Get single food item
-router.get('/:id', (req, res) => {
-  const item = store.getFoodById(req.params.id);
+router.get('/:id', async (req, res) => {
+  const item = await dbService.getFoodById(req.params.id);
   if (!item) {
     return res.status(404).json({ success: false, error: 'Food item not found' });
   }
@@ -36,7 +37,7 @@ router.post('/predict', (req, res) => {
 });
 
 // Log new food item
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   const {
     donorName,
     donorType,
@@ -98,7 +99,7 @@ router.post('/', (req, res) => {
   const updates = evaluateLifecycleState(rawItem, store.getOrganizations());
   const finalItemData = updates ? { ...rawItem, ...updates } : rawItem;
 
-  const created = store.addFood(finalItemData);
+  const created = await dbService.addFood(finalItemData);
   res.status(201).json({ success: true, data: created });
 });
 
