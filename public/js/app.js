@@ -1606,3 +1606,65 @@ window.syncSupabaseData = async function() {
 // Auto check DB status on load
 setTimeout(checkSupabaseStatus, 1000);
 
+/* ====================================================
+   PWA MOBILE APP INSTALLATION CONTROLLER
+   ==================================================== */
+let deferredPwaPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPwaPrompt = e;
+  console.log('📲 PWA beforeinstallprompt event captured');
+  
+  // Highlight Install App button
+  const installBtn = document.getElementById('btn-install-app');
+  if (installBtn) {
+    installBtn.style.animation = 'pulse-btn 2s infinite';
+  }
+});
+
+window.addEventListener('appinstalled', () => {
+  console.log('🎉 FoodCycle AI App installed successfully!');
+  deferredPwaPrompt = null;
+  showToast('🎉 FoodCycle AI App installed on your device!', 'success');
+  playChime('delivery');
+  closePwaModal();
+});
+
+window.triggerPwaInstall = function() {
+  if (deferredPwaPrompt) {
+    deferredPwaPrompt.prompt();
+    deferredPwaPrompt.userChoice.then(choice => {
+      if (choice.outcome === 'accepted') {
+        showToast('App installation accepted!', 'success');
+      }
+      deferredPwaPrompt = null;
+    });
+  } else {
+    // Open instructions modal for device guidance
+    const modal = document.getElementById('pwa-install-modal');
+    if (modal) modal.style.display = 'flex';
+  }
+};
+
+window.executeNativePwaInstall = function() {
+  if (deferredPwaPrompt) {
+    deferredPwaPrompt.prompt();
+    deferredPwaPrompt.userChoice.then(choice => {
+      if (choice.outcome === 'accepted') {
+        showToast('App installed!', 'success');
+      }
+      deferredPwaPrompt = null;
+      closePwaModal();
+    });
+  } else {
+    showToast('Follow the device instructions above to add to Home Screen!', 'info');
+  }
+};
+
+window.closePwaModal = function() {
+  const modal = document.getElementById('pwa-install-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+
